@@ -1,5 +1,2 @@
-# The Circle: SeeChange camera (Android)
-
-## Code conventies
-* De standaard Android conventies worden gehanteerd waar mogelijk.  
-  Formatteer code met `Ctrl` + `Alt` + `L`.
+# The Circle: SeeChange camera ![Platform](https://img.shields.io/badge/Platform-Android%209%2B-brightgreen.svg)
+Be sure to check out the [wiki](/wiki) of this project for information about code conventions and more.
