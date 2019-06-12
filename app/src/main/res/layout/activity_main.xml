@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="2"
             android:ems="10"
-            android:hint="Write a message"
+            android:hint="Say Something!"
             android:inputType="text"
             android:paddingHorizontal="10dp"
             android:text="" />
