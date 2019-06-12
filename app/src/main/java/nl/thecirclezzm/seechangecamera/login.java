@@ -26,5 +26,5 @@ public class login extends AppCompatActivity {
         Button loginButton = findViewById(R.id.loginButton);
     }
 
-    
+
 }
