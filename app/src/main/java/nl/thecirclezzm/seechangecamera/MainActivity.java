@@ -41,10 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ListView messageListView;
     private MessageAdapter messageAdapter;
-    
-    private Thread thread2;
-    private boolean startTyping = false;
-    private int time = 2;
+
 
     private Socket mSocket;
     {
@@ -53,21 +50,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (URISyntaxException e) {}
     }
 
-    @SuppressLint("HandlerLeak")
-    Handler handler2=new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            Log.i(TAG, "handleMessage: typing stopped " + startTyping);
-            if(time == 0){
-                setTitle("SocketIO");
-                Log.i(TAG, "handleMessage: typing stopped time is " + time);
-                startTyping = false;
-                time = 2;
-            }
-
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
             mSocket.connect();
             mSocket.on("connect user", onNewUser);
             mSocket.on("chat message", onNewMessage);
-            mSocket.on("on typing", onTyping);
 
             JSONObject userId = new JSONObject();
             try {
@@ -132,15 +113,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
-                JSONObject onTyping = new JSONObject();
-                try {
-                    onTyping.put("typing", true);
-                    onTyping.put("username", Username);
-                    onTyping.put("uniqueId", uniqueId);
-                    mSocket.emit("on typing", onTyping);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
 
                 if (charSequence.toString().trim().length() > 0) {
                     sendButton.setEnabled(true);
@@ -219,66 +191,6 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
-    Emitter.Listener onTyping = new Emitter.Listener() {
-        @Override
-        public void call(final Object... args) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    JSONObject data = (JSONObject) args[0];
-                    Log.i(TAG, "run: " + args[0]);
-                    try {
-                        Boolean typingOrNot = data.getBoolean("typing");
-                        String userName = data.getString("username") + " is Typing......";
-                        String id = data.getString("uniqueId");
-
-                        if(id.equals(uniqueId)){
-                            typingOrNot = false;
-                        }else {
-                            setTitle(userName);
-                        }
-
-                        if(typingOrNot){
-
-                            if(!startTyping){
-                                startTyping = true;
-                                thread2=new Thread(
-                                        new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                while(time > 0) {
-                                                    synchronized (this){
-                                                        try {
-                                                            wait(1000);
-                                                            Log.i(TAG, "run: typing " + time);
-                                                        } catch (InterruptedException e) {
-                                                            e.printStackTrace();
-                                                        }
-                                                        time--;
-                                                    }
-                                                    handler2.sendEmptyMessage(0);
-                                                }
-
-                                            }
-                                        }
-                                );
-                                thread2.start();
-                            }else {
-                                time = 2;
-                            }
-                            
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-        }
-    };
-
-    private void addMessage(String username, String message) {
-
-    }
 
     public void sendMessage(View view){
         Log.i(TAG, "sendMessage: ");
@@ -317,7 +229,6 @@ public class MainActivity extends AppCompatActivity {
             mSocket.disconnect();
             mSocket.off("chat message", onNewMessage);
             mSocket.off("connect user", onNewUser);
-            mSocket.off("on typing", onTyping);
             Username = "";
             messageAdapter.clear();
         }else {
