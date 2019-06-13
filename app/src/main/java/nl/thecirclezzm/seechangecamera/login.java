@@ -52,7 +52,7 @@ public class login extends AppCompatActivity {
 
     private void sendNetworkRequest(User user){
         Retrofit.Builder builder = new Retrofit.Builder()
-                .baseUrl("http://188.166.38.127/api/login")
+                .baseUrl("http://188.166.38.127/api/login/")
                 .addConverterFactory(GsonConverterFactory.create());
 
         Retrofit retrofit = builder.build();
