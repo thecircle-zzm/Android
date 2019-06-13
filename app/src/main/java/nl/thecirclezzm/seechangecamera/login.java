@@ -63,7 +63,14 @@ public class login extends AppCompatActivity {
         call.enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
-                Toast.makeText(login.this, "Och jongens das handel" + response.body().getAnswer(), Toast.LENGTH_SHORT).show();
+                if(response.code() == 200){
+                    Toast.makeText(login.this, "Och jongens das handel"/* + response.body().getAnswer()*/, Toast.LENGTH_SHORT).show();
+                } else if(response.code() == 400){
+                    Toast.makeText(login.this, "Och jongens das nie goed, verkeerd wachtwoord of gebruikersnaam" /*+ response.body().getAnswer()*/, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(login.this, "Och jongens das nie goed, status code " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+
             }
 
             @Override
