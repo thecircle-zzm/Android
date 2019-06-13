@@ -1,1 +1,1 @@
-include ':app', ':streaming_library'
+include ':app', ':streaming'

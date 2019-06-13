@@ -41,7 +41,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation project(':streaming_library')
+    implementation project(':streaming')
 
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'androidx.core:core:1.0.2'

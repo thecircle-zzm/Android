@@ -11,8 +11,11 @@ abstract class PermissionCompatActivity : AppCompatActivity() {
     private val permissionsCallback = SparseArray<(permissionsGranted: Boolean) -> Unit>()
     private var lastRequestCode = 50 // Start at a high number, so we don't break existing permission requests
 
-    protected fun requestPermissions(vararg permissions: String, onResultCallback: (permissionsGranted: Boolean) -> Unit) {
-        if(permissions.any { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }){
+    protected fun requestPermissions(
+        vararg permissions: String,
+        onResultCallback: (permissionsGranted: Boolean) -> Unit
+    ) {
+        if (permissions.any { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }) {
             // One of the permissions is not granted
             lastRequestCode++
             permissionsCallback[lastRequestCode] = onResultCallback

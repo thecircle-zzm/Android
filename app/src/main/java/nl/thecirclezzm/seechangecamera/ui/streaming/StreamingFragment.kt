@@ -2,15 +2,15 @@ package nl.thecirclezzm.seechangecamera.ui.streaming
 
 import android.Manifest.permission.*
 import android.annotation.SuppressLint
-import androidx.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.view.*
-import androidx.fragment.app.Fragment
 import androidx.annotation.RequiresPermission
-import androidx.constraintlayout.widget.ConstraintLayout
-import nl.thecirclezzm.streaming_library.CameraStream
+import androidx.databinding.DataBindingUtil
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProviders
 import nl.thecirclezzm.seechangecamera.R
-import nl.thecirclezzm.streaming_library.VideoResolutions
+import nl.thecirclezzm.seechangecamera.databinding.StreamingFragmentBinding
+import nl.thecirclezzm.streaming.StreamingCamera
 
 class StreamingFragment : Fragment() {
     companion object {
@@ -21,10 +21,10 @@ class StreamingFragment : Fragment() {
     private lateinit var viewModel: StreamingViewModel
     private var surfaceView: SurfaceView? = null
 
-    private var cameraStream: CameraStream? = null
+    private var cameraStream: StreamingCamera? = null
         set(value) {
             field = value
-            if(value != null)
+            if (value != null)
                 lifecycle.addObserver(value)
         }
 
@@ -33,25 +33,31 @@ class StreamingFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        return inflater.inflate(R.layout.streaming_fragment, container, false).also {
-            surfaceView = it.findViewById<SurfaceView>(R.id.cameraView).apply {
-                layoutParams = ConstraintLayout.LayoutParams(VideoResolutions.VGA.width, VideoResolutions.VGA.height)
-            }
+        val streamingFragmentBinding: StreamingFragmentBinding =
+            DataBindingUtil.inflate(layoutInflater, R.layout.streaming_fragment, container, false)
+        return streamingFragmentBinding.root.apply {
+            surfaceView = findViewById(R.id.surfaceView)
             surfaceView?.holder?.addCallback(object : SurfaceHolder.Callback {
                 override fun surfaceChanged(p0: SurfaceHolder?, p1: Int, p2: Int, p3: Int) {}
 
-                override fun surfaceDestroyed(p0: SurfaceHolder?) {}
+                override fun surfaceDestroyed(p0: SurfaceHolder?) {
+                    cameraStream?.onStop()
+                    cameraStream = null
+                }
 
                 @SuppressLint("MissingPermission")
                 override fun surfaceCreated(p0: SurfaceHolder?) {
-                    cameraStream = CameraStream(
-                        viewModel.streamingUrl,
-                        surfaceView!!
-                    )
-                    cameraStream?.streaming = true
+                    cameraStream = StreamingCamera(surfaceView!!, StreamingCamera.Protocol.RTMP, viewModel).also {
+                        it.prepareAudio()
+                        it.prepareVideo()
+                        surfaceView?.layoutParams = surfaceView?.layoutParams?.apply {
+                            width = it.streamHeight
+                            height = it.streamWidth
+                        }
+                        it.startStream(viewModel.streamingUrl)
+                    }
                 }
             })
-
         }
     }
 
