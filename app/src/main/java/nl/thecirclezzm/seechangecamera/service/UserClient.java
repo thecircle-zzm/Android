@@ -7,8 +7,8 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 public interface UserClient {
-    @POST("user")
-    Call<streamingKey> loginAccount(@Body User user);
+    @POST("login")
+    Call<User> loginAccount(@Body User user);
 
 
 }

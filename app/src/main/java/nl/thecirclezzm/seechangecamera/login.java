@@ -33,17 +33,17 @@ public class login extends AppCompatActivity {
         TextView usernameTextView = findViewById(R.id.usernameTextView);
         TextView passwordTextView = findViewById(R.id.passwordTextView);
 
-        EditText usernameInputField = findViewById(R.id.usernameInputField);
-        EditText passwordInputField = findViewById(R.id.passwordInputField);
+        EditText username = findViewById(R.id.usernameInputField);
+        EditText password = findViewById(R.id.passwordInputField);
 
-        usernameTextView.setText(usernameInputField.getText());
-        passwordTextView.setText(passwordInputField.getText());
+        usernameTextView.setText(username.getText());
+        passwordTextView.setText(password.getText());
 
         Button loginAccount = (Button) findViewById(R.id.loginButton);
         loginAccount.setOnClickListener((view) -> {
             User user = new User(
-                usernameInputField.getText().toString(),
-                passwordInputField.getText().toString()
+                username.getText().toString(),
+                password.getText().toString()
             );
 
             sendNetworkRequest(user);
@@ -52,23 +52,23 @@ public class login extends AppCompatActivity {
 
     private void sendNetworkRequest(User user){
         Retrofit.Builder builder = new Retrofit.Builder()
-                .baseUrl("http://188.166.38.127/api/login/")
+                .baseUrl("http://188.166.38.127/api/")
                 .addConverterFactory(GsonConverterFactory.create());
 
         Retrofit retrofit = builder.build();
 
         UserClient client = retrofit.create(UserClient.class);
-        Call<streamingKey> call = client.loginAccount(user);
+        Call<User> call = client.loginAccount(user);
 
-        call.enqueue(new Callback<streamingKey>() {
+        call.enqueue(new Callback<User>() {
             @Override
-            public void onResponse(Call<streamingKey> call, Response<streamingKey> response) {
-                Toast.makeText(login.this, "Och jongens das handel", Toast.LENGTH_SHORT).show();
+            public void onResponse(Call<User> call, Response<User> response) {
+                Toast.makeText(login.this, "Och jongens das handel" + response.body().getAnswer(), Toast.LENGTH_SHORT).show();
             }
 
             @Override
-            public void onFailure(Call<streamingKey> call, Throwable t) {
-                Toast.makeText(login.this, "Och jongens nie goed", Toast.LENGTH_SHORT).show();
+            public void onFailure(Call<User> call, Throwable t) {
+                Toast.makeText(login.this, "Och jongens nie goed, " + t.toString(), Toast.LENGTH_SHORT).show();
             }
         });
     }

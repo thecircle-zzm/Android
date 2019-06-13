@@ -2,12 +2,17 @@ package nl.thecirclezzm.seechangecamera.model;
 
 public class User {
 
+    private String answer;
     private String username;
     private String password;
 
     public User(String username, String password) {
         this.username = username;
         this.password = password;
+    }
+
+    public String getAnswer(){
+        return answer;
     }
 
     public String getUsername() {
