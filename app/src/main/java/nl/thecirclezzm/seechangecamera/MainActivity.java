@@ -170,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
                     if(length == 0){
                         return;
                     }
-                    //Here i'm getting weird error..................///////run :1 and run: 0
+
                     Log.i(TAG, "run: ");
                     Log.i(TAG, "run: " + args.length);
                     String username =args[0].toString();
