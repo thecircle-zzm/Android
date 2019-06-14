@@ -11,8 +11,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.Enumeration;
 
 import nl.thecirclezzm.seechangecamera.model.User;
 import nl.thecirclezzm.seechangecamera.model.streamingKey;
@@ -29,6 +34,8 @@ public class login extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        PrintInstalledCertificates();
 
         TextView usernameTextView = findViewById(R.id.usernameTextView);
         TextView passwordTextView = findViewById(R.id.passwordTextView);
@@ -47,6 +54,7 @@ public class login extends AppCompatActivity {
             );
 
             sendNetworkRequest(user);
+
         });
     }
 
@@ -70,7 +78,6 @@ public class login extends AppCompatActivity {
                 } else {
                     Toast.makeText(login.this, "Och jongens das nie goed, status code " + response.code(), Toast.LENGTH_SHORT).show();
                 }
-
             }
 
             @Override
@@ -78,6 +85,44 @@ public class login extends AppCompatActivity {
                 Toast.makeText(login.this, "Och jongens nie goed, " + t.toString(), Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    public void PrintInstalledCertificates() {
+        try {
+            KeyStore ks = KeyStore.getInstance("AndroidCAStore");
+
+            if (ks != null) {
+                ks.load(null, null);
+                Enumeration<String> aliases = ks.aliases();
+
+                while (aliases.hasMoreElements()) {
+
+                    String alias = (String) aliases.nextElement();
+
+                    java.security.cert.X509Certificate cert = (java.security.cert.X509Certificate) ks.getCertificate(alias);
+                    //To print System Certs only
+                    if(cert.getIssuerDN().getName().contains("system")){
+                        System.out.println(cert.getIssuerDN().getName());
+                    }
+
+                    //To print User Certs only
+                    if(cert.getIssuerDN().getName().contains("user")){
+                        System.out.println(cert.getIssuerDN().getName());
+                    }
+
+                    //To print all certs
+                    System.out.println(cert.getIssuerDN().getName());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (java.security.cert.CertificateException e) {
+            e.printStackTrace();
+        }
     }
 
     public void loginButtonOnClick(View v){
