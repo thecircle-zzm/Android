@@ -1,7 +1,12 @@
 package nl.thecirclezzm.seechangecamera;
 
 import android.annotation.SuppressLint;
+import android.app.PictureInPictureParams;
+import android.content.res.Configuration;
+import android.graphics.Rect;
 import android.os.Bundle;
+import android.util.Rational;
+import android.view.View;
 
 import androidx.annotation.Nullable;
 
@@ -36,5 +41,19 @@ public class StreamingActivity extends PermissionCompatActivity {
                 return null;
             });
         }
+    }
+
+    @Override
+    public void onUserLeaveHint() {
+        enterPictureInPictureMode(
+                new PictureInPictureParams.Builder()
+                        .setSourceRectHint(new Rect(0, 0, 640, 480))
+                        .setAspectRatio(new Rational(3, 4))
+                        .build());
+    }
+
+    @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
+        findViewById(R.id.chatContainer).setVisibility(isInPictureInPictureMode ? View.GONE : View.VISIBLE);
     }
 }

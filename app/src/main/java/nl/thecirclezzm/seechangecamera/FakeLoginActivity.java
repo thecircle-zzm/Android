@@ -14,13 +14,13 @@ import nl.thecirclezzm.seechangecamera.ui.chat.ChatsFragment;
 
 public class FakeLoginActivity extends AppCompatActivity {
 
-    private Button setNickName;
-    private EditText userNickName;
+    /*private Button setNickName;
+    private EditText userNickName;*/
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.fake_login_activity);
+        /*setContentView(R.layout.fake_login_activity);
 
         userNickName = findViewById(R.id.userNickName);
         setNickName = findViewById(R.id.setNickName);
@@ -52,6 +52,12 @@ public class FakeLoginActivity extends AppCompatActivity {
             Intent intent = new Intent(FakeLoginActivity.this, StreamingActivity.class);
             intent.putExtra("username", userNickName.getText().toString());
             startActivity(intent);
-        });
+            finish();
+        });*/
+
+        Intent intent = new Intent(FakeLoginActivity.this, StreamingActivity.class);
+        intent.putExtra("username", "Streamer");
+        startActivity(intent);
+        finish();
     }
 }
