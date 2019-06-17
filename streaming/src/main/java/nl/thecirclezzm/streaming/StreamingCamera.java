@@ -78,7 +78,7 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
 
     @RequiresPermission(value = Manifest.permission.WRITE_EXTERNAL_STORAGE)
     public StreamingCamera(@NonNull SurfaceView surfaceView, @NonNull Protocol streamingProtocol, @NonNull ConnectionCallbacks connectionCallbacks) {
-        this.streamingProtocol = streamingProtocol == Protocol.RTMP ? new RtmpProtocol(connectionCallbacks) : new RtspProtocol(connectionCallbacks);
+        this.streamingProtocol = new RtmpProtocol(connectionCallbacks);
         this.surfaceView = surfaceView;
         this.context = surfaceView.getContext().getApplicationContext();
         init();
@@ -86,7 +86,7 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
 
     @RequiresPermission(value = Manifest.permission.WRITE_EXTERNAL_STORAGE)
     public StreamingCamera(@NonNull TextureView textureView, @NonNull Protocol streamingProtocol, @NonNull ConnectionCallbacks connectionCallbacks) {
-        this.streamingProtocol = streamingProtocol == Protocol.RTMP ? new RtmpProtocol(connectionCallbacks) : new RtspProtocol(connectionCallbacks);
+        this.streamingProtocol = new RtmpProtocol(connectionCallbacks);
         this.textureView = textureView;
         this.context = textureView.getContext().getApplicationContext();
         init();
@@ -665,6 +665,6 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
     }
 
     public enum Protocol {
-        RTMP, RTSP
+        RTMP
     }
 }
