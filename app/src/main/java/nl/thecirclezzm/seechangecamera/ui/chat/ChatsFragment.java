@@ -106,7 +106,7 @@ public class ChatsFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater layoutInflater, ViewGroup container, Bundle savedInstanceState) {
-        return layoutInflater.inflate(R.layout.activity_main, container, false);
+        return layoutInflater.inflate(R.layout.chats_fragment, container, false);
     }
 
     @Override

@@ -20,7 +20,7 @@ public class FakeLoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_add_user);
+        setContentView(R.layout.fake_login_activity);
 
         userNickName = findViewById(R.id.userNickName);
         setNickName = findViewById(R.id.setNickName);
