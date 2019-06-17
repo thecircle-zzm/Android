@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 
+import nl.thecirclezzm.seechangecamera.ui.chat.ChatsFragment;
 import nl.thecirclezzm.seechangecamera.ui.streaming.StreamingFragment;
 import nl.thecirclezzm.seechangecamera.utils.PermissionCompatActivity;
 
@@ -22,10 +23,15 @@ public class StreamingActivity extends PermissionCompatActivity {
 
         if (savedInstanceState == null) {
             requestPermissions(new String[]{INTERNET, CAMERA, RECORD_AUDIO, WRITE_EXTERNAL_STORAGE}, permissionsGranted -> {
-                if (permissionsGranted)
+                if (permissionsGranted) {
                     getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.container, StreamingFragment.Companion.newInstance())
+                            .replace(R.id.streamContainer, StreamingFragment.Companion.newInstance())
                             .commitNow();
+
+                    getSupportFragmentManager().beginTransaction()
+                            .replace(R.id.chatContainer, ChatsFragment.newInstance())
+                            .commitNow();
+                }
 
                 return null;
             });

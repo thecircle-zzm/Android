@@ -41,6 +41,8 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
+    implementation 'com.github.nkzawa:socket.io-client:0.3.0'
+
     implementation project(':streaming')
 
     implementation 'androidx.appcompat:appcompat:1.0.2'
