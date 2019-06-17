@@ -27,7 +27,10 @@
         </activity>
         <activity
             android:name=".StreamingActivity"
-            android:screenOrientation="portrait" />
+            android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait"
+            android:supportsPictureInPicture="true" />
     </application>
 
 </manifest>
