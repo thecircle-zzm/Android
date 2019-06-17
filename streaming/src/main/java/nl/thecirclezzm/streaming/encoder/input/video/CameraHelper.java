@@ -5,6 +5,8 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
+
 /**
  * Created by pedro on 17/12/18.
  */
@@ -18,11 +20,12 @@ public class CameraHelper {
             1f, 1f, 0f, 1f, 1f,
     };
 
+    @NonNull
     public static float[] getVerticesData() {
         return verticesData;
     }
 
-    public static int getCameraOrientation(Context context) {
+    public static int getCameraOrientation(@NonNull Context context) {
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         if (windowManager != null) {
             int orientation = windowManager.getDefaultDisplay().getRotation();
