@@ -1,4 +1,4 @@
-package nl.thecirclezzm.seechangecamera;
+package nl.thecirclezzm.seechangecamera.ui.chat;
 
 import android.app.Activity;
 import android.content.Context;
@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import nl.thecirclezzm.seechangecamera.R;
+
 public class MessageAdapter extends ArrayAdapter<MessageFormat> {
     public MessageAdapter(Context context, int resource, List<MessageFormat> objects) {
         super(context, resource, objects);
@@ -18,36 +20,36 @@ public class MessageAdapter extends ArrayAdapter<MessageFormat> {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        Log.i(MainActivity.TAG, "getView:");
+        Log.i(ChatsFragment.TAG, "getView:");
 
         MessageFormat message = getItem(position);
 
-        if(TextUtils.isEmpty(message.getMessage())){
+        if (TextUtils.isEmpty(message.getMessage())) {
 
 
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.user_connected, parent, false);
 
             TextView messageText = convertView.findViewById(R.id.message_body);
 
-            Log.i(MainActivity.TAG, "getView: is empty ");
+            Log.i(ChatsFragment.TAG, "getView: is empty ");
             String userConnected = message.getUsername();
             messageText.setText(userConnected);
 
-        }else if(message.getUniqueId().equals(MainActivity.uniqueId)){
-            Log.i(MainActivity.TAG, "getView: " + message.getUniqueId() + " " + MainActivity.uniqueId);
+        } else if (message.getUniqueId().equals(ChatsFragment.uniqueId)) {
+            Log.i(ChatsFragment.TAG, "getView: " + message.getUniqueId() + " " + ChatsFragment.uniqueId);
 
 
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.my_message, parent, false);
             TextView messageText = convertView.findViewById(R.id.message_body);
             messageText.setText(message.getMessage());
 
-        }else {
-            Log.i(MainActivity.TAG, "getView: is not empty");
+        } else {
+            Log.i(ChatsFragment.TAG, "getView: is not empty");
 
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.their_message, parent, false);
 
             TextView messageText = convertView.findViewById(R.id.message_body);
-            TextView usernameText = (TextView) convertView.findViewById(R.id.name);
+            TextView usernameText = convertView.findViewById(R.id.name);
 
             messageText.setVisibility(View.VISIBLE);
             usernameText.setVisibility(View.VISIBLE);

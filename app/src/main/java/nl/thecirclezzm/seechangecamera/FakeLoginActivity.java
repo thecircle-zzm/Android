@@ -5,12 +5,14 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+
 import androidx.appcompat.app.AppCompatActivity;
 
-public class AddUserActivity extends AppCompatActivity {
+import nl.thecirclezzm.seechangecamera.ui.chat.ChatsFragment;
+
+public class FakeLoginActivity extends AppCompatActivity {
 
     private Button setNickName;
     private EditText userNickName;
@@ -33,9 +35,9 @@ public class AddUserActivity extends AppCompatActivity {
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 if (charSequence.toString().trim().length() > 0) {
                     setNickName.setEnabled(true);
-                    Log.i(MainActivity.TAG, "onTextChanged: ABLED");
+                    Log.i(ChatsFragment.TAG, "onTextChanged: ABLED");
                 } else {
-                    Log.i(MainActivity.TAG, "onTextChanged: DISABLED");
+                    Log.i(ChatsFragment.TAG, "onTextChanged: DISABLED");
                     setNickName.setEnabled(false);
                 }
             }
@@ -46,13 +48,10 @@ public class AddUserActivity extends AppCompatActivity {
         });
 
 
-        setNickName.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(AddUserActivity.this, MainActivity.class);
-                intent.putExtra("username", userNickName.getText().toString());
-                startActivity(intent);
-            }
+        setNickName.setOnClickListener(v -> {
+            Intent intent = new Intent(FakeLoginActivity.this, StreamingActivity.class);
+            intent.putExtra("username", userNickName.getText().toString());
+            startActivity(intent);
         });
     }
 }

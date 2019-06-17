@@ -1,10 +1,10 @@
-package nl.thecirclezzm.seechangecamera;
+package nl.thecirclezzm.seechangecamera.ui.chat;
 
 public class MessageFormat {
 
-    private String Username;
-    private String Message;
-    private String UniqueId;
+    private final String Username;
+    private final String Message;
+    private final String UniqueId;
 
     public MessageFormat(String uniqueId, String username, String message) {
         Username = username;
