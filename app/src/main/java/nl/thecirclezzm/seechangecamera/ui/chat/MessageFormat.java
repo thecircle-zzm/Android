@@ -1,28 +1,48 @@
 package nl.thecirclezzm.seechangecamera.ui.chat;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.util.Objects;
+
 public class MessageFormat {
+    private final String username;
+    private final String message;
+    private final String uniqueId;
 
-    private final String Username;
-    private final String Message;
-    private final String UniqueId;
-
-    public MessageFormat(String uniqueId, String username, String message) {
-        Username = username;
-        Message = message;
-        UniqueId = uniqueId;
+    MessageFormat(@Nullable String uniqueId, @NonNull String username, @Nullable String message) {
+        this.username = username;
+        this.message = message;
+        this.uniqueId = uniqueId;
     }
 
-    public String getUsername() {
-        return Username;
+    @NonNull
+    String getUsername() {
+        return username;
     }
 
-    public String getMessage() {
-        return Message;
+    @Nullable
+    String getMessage() {
+        return message;
     }
 
-
-    public String getUniqueId() {
-        return UniqueId;
+    @Nullable
+    String getUniqueId() {
+        return uniqueId;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MessageFormat that = (MessageFormat) o;
+        return username.equals(that.username) &&
+                Objects.equals(message, that.message) &&
+                Objects.equals(uniqueId, that.uniqueId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(username, message, uniqueId);
+    }
 }
