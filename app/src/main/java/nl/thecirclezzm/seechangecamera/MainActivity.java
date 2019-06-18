@@ -36,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     public static String uniqueId;
 
     private String Username;
+    private String Room;
 
     private Boolean hasConnection = false;
 
@@ -46,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private Socket mSocket;
     {
         try {
-            mSocket = IO.socket("https://nameless-thicket-23770.herokuapp.com/");
+            mSocket = IO.socket("http://145.49.6.171:5000");
         } catch (URISyntaxException e) {}
     }
 
@@ -57,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         Username = getIntent().getStringExtra("username");
+        Room = "1";
 
         uniqueId = UUID.randomUUID().toString();
         Log.i(TAG, "onCreate: " + uniqueId);
@@ -69,13 +71,17 @@ public class MainActivity extends AppCompatActivity {
 
         }else {
             mSocket.connect();
-            mSocket.on("connect user", onNewUser);
-            mSocket.on("chat message", onNewMessage);
+            mSocket.on("join", onNewUser);
+            mSocket.on("sendMessage", onNewMessage);
 
-            JSONObject userId = new JSONObject();
+            JSONObject user = new JSONObject();
             try {
-                userId.put("username", Username + " Connected");
-                mSocket.emit("connect user", userId);
+                user.put("username", Username);
+                user.put("room", Room);
+
+                Log.i(TAG,"user" + user.toString());
+
+                mSocket.emit("join", user.toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -133,8 +139,7 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Log.i(TAG, "run: ");
-                    Log.i(TAG, "run: " + args.length);
+
                     JSONObject data = (JSONObject) args[0];
                     String username;
                     String message;
@@ -146,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 
                         Log.i(TAG, "run: " + username + message + id);
 
-                        MessageFormat format = new MessageFormat(id, username, message);
+                        MessageFormat format = new MessageFormat(id, username, Room, message);
                         Log.i(TAG, "run:4 ");
                         messageAdapter.add(format);
                         Log.i(TAG, "run:5 ");
@@ -171,20 +176,25 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
 
-                    Log.i(TAG, "run: ");
-                    Log.i(TAG, "run: " + args.length);
                     String username =args[0].toString();
+                    String room = "1";
                     try {
-                        JSONObject object = new JSONObject(username);
+                        JSONObject object = new JSONObject();
+
+                        object.put("username", Username);
+                        object.put("room", Room);
+
+
                         username = object.getString("username");
+                        room = object.getString("room");
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    MessageFormat format = new MessageFormat(null, username, null);
+                    MessageFormat format = new MessageFormat(null, username, null, room);
                     messageAdapter.add(format);
                     messageListView.smoothScrollToPosition(0);
                     messageListView.scrollTo(0, messageAdapter.getCount()-1);
-                    Log.i(TAG, "run: " + username);
+
                 }
             });
         }
@@ -208,7 +218,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.i(TAG, "sendMessage: 1"+ mSocket.emit("chat message", jsonObject));
+        Log.i(TAG, "sendMessage: 1"+ mSocket.emit("sendMessage", jsonObject));
     }
 
     @Override
@@ -221,14 +231,14 @@ public class MainActivity extends AppCompatActivity {
             JSONObject userId = new JSONObject();
             try {
                 userId.put("username", Username + " DisConnected");
-                mSocket.emit("connect user", userId);
+                mSocket.emit("join", userId);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
             mSocket.disconnect();
-            mSocket.off("chat message", onNewMessage);
-            mSocket.off("connect user", onNewUser);
+            mSocket.off("sendMessage", onNewMessage);
+            mSocket.off("join", onNewUser);
             Username = "";
             messageAdapter.clear();
         }else {
