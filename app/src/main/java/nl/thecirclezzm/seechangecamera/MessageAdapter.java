@@ -10,6 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import java.util.List;
+import java.util.Objects;
 
 public class MessageAdapter extends ArrayAdapter<MessageFormat> {
     public MessageAdapter(Context context, int resource, List<MessageFormat> objects) {
@@ -33,7 +34,7 @@ public class MessageAdapter extends ArrayAdapter<MessageFormat> {
             String userConnected = message.getUsername();
             messageText.setText(userConnected);
 
-        }else if(message.getUniqueId().equals(MainActivity.uniqueId)){
+        }else if(Objects.equals(message.getUniqueId(), MainActivity.uniqueId)){
             Log.i(MainActivity.TAG, "getView: " + message.getUniqueId() + " " + MainActivity.uniqueId);
 
 

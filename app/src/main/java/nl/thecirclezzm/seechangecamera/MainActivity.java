@@ -141,17 +141,20 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
 
                     JSONObject data = (JSONObject) args[0];
+                    try {
+                        Log.i(TAG, data.toString(4));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     String username;
                     String message;
-                    String id;
                     try {
                         username = data.getString("username");
                         message = data.getString("message");
-                        id = data.getString("uniqueId");
 
-                        Log.i(TAG, "run: " + username + message + id);
+                        Log.i(TAG, "run: " + username + message);
 
-                        MessageFormat format = new MessageFormat(id, username, Room, message);
+                        MessageFormat format = new MessageFormat(null, username, message, null);
                         Log.i(TAG, "run:4 ");
                         messageAdapter.add(format);
                         Log.i(TAG, "run:5 ");
@@ -176,24 +179,22 @@ public class MainActivity extends AppCompatActivity {
                         return;
                     }
 
-                    String username =args[0].toString();
-                    String room = "1";
+                    JSONObject data = (JSONObject) args[0];
+
                     try {
-                        JSONObject object = new JSONObject();
-
-                        object.put("username", Username);
-                        object.put("room", Room);
+                        JSONObject body = data.getJSONObject("user");
+                        Log.i(TAG, data.toString(4));
 
 
-                        username = object.getString("username");
-                        room = object.getString("room");
+                        String username = body.getString("username");
+                        MessageFormat format = new MessageFormat(null, username, null, Room);
+                        messageAdapter.add(format);
+                        messageListView.smoothScrollToPosition(0);
+                        messageListView.scrollTo(0, messageAdapter.getCount()-1);
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    MessageFormat format = new MessageFormat(null, username, null, room);
-                    messageAdapter.add(format);
-                    messageListView.smoothScrollToPosition(0);
-                    messageListView.scrollTo(0, messageAdapter.getCount()-1);
+
 
                 }
             });
@@ -203,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void sendMessage(View view){
-        Log.i(TAG, "sendMessage: ");
+        Log.i(TAG, "sendMefffssage: ");
         String message = textField.getText().toString().trim();
         if(TextUtils.isEmpty(message)){
             Log.i(TAG, "sendMessage:2 ");
@@ -214,11 +215,13 @@ public class MainActivity extends AppCompatActivity {
         try {
             jsonObject.put("message", message);
             jsonObject.put("username", Username);
-            jsonObject.put("uniqueId", uniqueId);
+
+
+            Log.i(TAG, "sendMessage: " + jsonObject);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.i(TAG, "sendMessage: 1"+ mSocket.emit("sendMessage", jsonObject));
+        Log.i(TAG, "sendMessage: 1"+ mSocket.emit("sendMessage", jsonObject.toString()));
     }
 
     @Override
@@ -228,10 +231,10 @@ public class MainActivity extends AppCompatActivity {
         if(isFinishing()){
             Log.i(TAG, "onDestroy: ");
 
-            JSONObject userId = new JSONObject();
+            JSONObject user = new JSONObject();
             try {
-                userId.put("username", Username + " DisConnected");
-                mSocket.emit("join", userId);
+                user.put("username", Username + " DisConnected");
+                mSocket.emit("join", user);
             } catch (JSONException e) {
                 e.printStackTrace();
             }

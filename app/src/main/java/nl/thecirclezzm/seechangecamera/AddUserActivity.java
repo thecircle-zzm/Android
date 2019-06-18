@@ -52,6 +52,7 @@ public class AddUserActivity extends AppCompatActivity {
                 Intent intent = new Intent(AddUserActivity.this, MainActivity.class);
                 intent.putExtra("username", userNickName.getText().toString());
                 startActivity(intent);
+                finish();
             }
         });
     }
