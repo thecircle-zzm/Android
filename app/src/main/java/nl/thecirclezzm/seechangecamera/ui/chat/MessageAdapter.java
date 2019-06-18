@@ -26,29 +26,21 @@ public class MessageAdapter extends ArrayAdapter<MessageFormat> {
     @Override
     public @NonNull
     View getView(int position, @Nullable View convertView, @Nullable ViewGroup parent) {
-        Log.i(ChatsFragment.TAG, "getView:");
-
         MessageFormat message = getItem(position);
 
-        if (TextUtils.isEmpty(message.getMessage())) {
+        if (message.getMessage() == null || TextUtils.isEmpty(message.getMessage())) {
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.user_connected, parent, false);
 
             AppCompatTextView messageText = convertView.findViewById(R.id.message_body);
 
-            Log.i(ChatsFragment.TAG, "getView: is empty ");
             String userConnected = message.getUsername();
             messageText.setText(userConnected);
 
         } else if (Objects.equals(message.getUniqueId(), ChatsFragment.uniqueId)) {
-            Log.i(ChatsFragment.TAG, "getView: " + message.getUniqueId() + " " + ChatsFragment.uniqueId);
-
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.my_message, parent, false);
             AppCompatTextView messageText = convertView.findViewById(R.id.message_body);
             messageText.setText(message.getMessage());
-
         } else {
-            Log.i(ChatsFragment.TAG, "getView: is not empty");
-
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.their_message, parent, false);
 
             AppCompatTextView messageText = convertView.findViewById(R.id.message_body);
