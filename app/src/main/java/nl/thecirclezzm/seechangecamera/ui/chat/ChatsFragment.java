@@ -8,7 +8,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
@@ -20,7 +19,6 @@ import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
 import com.google.android.material.textfield.TextInputEditText;
-import com.google.android.material.textfield.TextInputLayout;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -104,7 +102,8 @@ public class ChatsFragment extends Fragment {
         }
     }
 
-    public static @NonNull ChatsFragment newInstance() {
+    public static @NonNull
+    ChatsFragment newInstance() {
         return new ChatsFragment();
     }
 
