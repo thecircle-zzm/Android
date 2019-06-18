@@ -12,11 +12,15 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,7 +35,7 @@ import nl.thecirclezzm.seechangecamera.R;
 public class ChatsFragment extends Fragment {
     public static final String TAG = "ChatsFragment";
     static String uniqueId;
-    private EditText textField;
+    private TextInputEditText textField;
     private ImageButton sendButton;
     private String Username;
     private Boolean hasConnection = false;
@@ -100,7 +104,7 @@ public class ChatsFragment extends Fragment {
         }
     }
 
-    public static ChatsFragment newInstance() {
+    public static @NonNull ChatsFragment newInstance() {
         return new ChatsFragment();
     }
 
@@ -110,7 +114,7 @@ public class ChatsFragment extends Fragment {
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState) {
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         Username = ChatsFragment.this.getActivity().getIntent().getStringExtra("username");
@@ -155,7 +159,7 @@ public class ChatsFragment extends Fragment {
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putBoolean("hasConnection", hasConnection);
     }
