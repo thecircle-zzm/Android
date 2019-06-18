@@ -36,6 +36,7 @@ public class ChatsFragment extends Fragment {
     private TextInputEditText textField;
     private ImageButton sendButton;
     private String Username;
+    private String Room;
     private Boolean hasConnection = false;
     private ListView messageListView;
     private MessageAdapter messageAdapter;
@@ -43,25 +44,27 @@ public class ChatsFragment extends Fragment {
         @Override
         public void call(final Object... args) {
             ChatsFragment.this.getActivity().runOnUiThread(() -> {
-                Log.i(TAG, "run: ");
-                Log.i(TAG, "run: " + args.length);
                 JSONObject data = (JSONObject) args[0];
+                try {
+                    Log.i(TAG, data.toString(4));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 String username;
                 String message;
-                String id;
                 try {
                     username = data.getString("username");
                     message = data.getString("message");
-                    id = data.getString("uniqueId");
 
-                    Log.i(TAG, "run: " + username + message + id);
+                    Log.i(TAG, "run: " + username + message);
 
-                    MessageFormat format = new MessageFormat(id, username, message);
+                    MessageFormat format = new MessageFormat(null, username, message, null);
                     Log.i(TAG, "run:4 ");
                     messageAdapter.add(format);
                     Log.i(TAG, "run:5 ");
 
                 } catch (Exception e) {
+                    return;
                 }
             });
         }
@@ -72,24 +75,26 @@ public class ChatsFragment extends Fragment {
             ChatsFragment.this.getActivity().runOnUiThread(() -> {
                 int length = args.length;
 
-                if (length == 0) {
+                if(length == 0){
                     return;
                 }
 
-                Log.i(TAG, "run: ");
-                Log.i(TAG, "run: " + args.length);
-                String username = args[0].toString();
+                JSONObject data = (JSONObject) args[0];
+
                 try {
-                    JSONObject object = new JSONObject(username);
-                    username = object.getString("username");
+                    JSONObject body = data.getJSONObject("user");
+                    Log.i(TAG, data.toString(4));
+
+
+                    String username = body.getString("username");
+                    MessageFormat format = new MessageFormat(null, username, null, Room);
+                    messageAdapter.add(format);
+                    messageListView.smoothScrollToPosition(0);
+                    messageListView.scrollTo(0, messageAdapter.getCount()-1);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                MessageFormat format = new MessageFormat(null, username, null);
-                messageAdapter.add(format);
-                messageListView.smoothScrollToPosition(0);
-                messageListView.scrollTo(0, messageAdapter.getCount() - 1);
-                Log.i(TAG, "run: " + username);
+
             });
         }
     };
@@ -97,7 +102,7 @@ public class ChatsFragment extends Fragment {
 
     {
         try {
-            mSocket = IO.socket("https://nameless-thicket-23770.herokuapp.com/");
+            mSocket = IO.socket("http://145.49.6.171:5000");
         } catch (URISyntaxException e) {
         }
     }
@@ -117,6 +122,7 @@ public class ChatsFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         Username = ChatsFragment.this.getActivity().getIntent().getStringExtra("username");
+        Room = "1";
 
         uniqueId = UUID.randomUUID().toString();
         Log.i(TAG, "onCreate: " + uniqueId);
@@ -127,16 +133,21 @@ public class ChatsFragment extends Fragment {
 
         if (!hasConnection) {
             mSocket.connect();
-            mSocket.on("connect user", onNewUser);
-            mSocket.on("chat message", onNewMessage);
+            mSocket.on("join", onNewUser);
+            mSocket.on("sendMessage", onNewMessage);
 
-            JSONObject userId = new JSONObject();
+            JSONObject user = new JSONObject();
             try {
-                userId.put("username", Username + " Connected");
-                mSocket.emit("connect user", userId);
+                user.put("username", Username);
+                user.put("room", Room);
+
+                Log.i(TAG,"user" + user.toString());
+
+                mSocket.emit("join", user.toString());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
         }
 
         Log.i(TAG, "onCreate: " + hasConnection);
@@ -187,9 +198,9 @@ public class ChatsFragment extends Fragment {
     }
 
     private void sendMessage(View view) {
-        Log.i(TAG, "sendMessage: ");
+        Log.i(TAG, "sendMefffssage: ");
         String message = textField.getText().toString().trim();
-        if (TextUtils.isEmpty(message)) {
+        if(TextUtils.isEmpty(message)){
             Log.i(TAG, "sendMessage:2 ");
             return;
         }
@@ -198,34 +209,36 @@ public class ChatsFragment extends Fragment {
         try {
             jsonObject.put("message", message);
             jsonObject.put("username", Username);
-            jsonObject.put("uniqueId", uniqueId);
+
+
+            Log.i(TAG, "sendMessage: " + jsonObject);
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        Log.i(TAG, "sendMessage: 1" + mSocket.emit("chat message", jsonObject));
+        Log.i(TAG, "sendMessage: 1"+ mSocket.emit("sendMessage", jsonObject.toString()));
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        if (getActivity().isFinishing()) {
+        if(getActivity().isFinishing()){
             Log.i(TAG, "onDestroy: ");
 
-            JSONObject userId = new JSONObject();
+            JSONObject user = new JSONObject();
             try {
-                userId.put("username", Username + " DisConnected");
-                mSocket.emit("connect user", userId);
+                user.put("username", Username + " DisConnected");
+                mSocket.emit("join", user);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
             mSocket.disconnect();
-            mSocket.off("chat message", onNewMessage);
-            mSocket.off("connect user", onNewUser);
+            mSocket.off("sendMessage", onNewMessage);
+            mSocket.off("join", onNewUser);
             Username = "";
             messageAdapter.clear();
-        } else {
+        }else {
             Log.i(TAG, "onDestroy: is rotating.....");
         }
 

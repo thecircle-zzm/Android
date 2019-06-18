@@ -8,12 +8,14 @@ import java.util.Objects;
 public class MessageFormat {
     private final String username;
     private final String message;
+    private final String room;
     private final String uniqueId;
 
-    MessageFormat(@Nullable String uniqueId, @NonNull String username, @Nullable String message) {
+    MessageFormat(@Nullable String uniqueId, @NonNull String username, @Nullable String message, @Nullable String room) {
         this.username = username;
         this.message = message;
         this.uniqueId = uniqueId;
+        this.room = room;
     }
 
     @NonNull
@@ -29,6 +31,11 @@ public class MessageFormat {
     @Nullable
     String getUniqueId() {
         return uniqueId;
+    }
+
+    @Nullable
+    String getRoom() {
+        return room;
     }
 
     @Override

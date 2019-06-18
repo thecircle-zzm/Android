@@ -57,7 +57,7 @@ public class MessageAdapter extends ArrayAdapter<MessageFormat> {
 
             messageText.setText(message.getMessage());
             usernameText.setText(message.getUsername());
-            avatar.setText(message.getUsername().toUpperCase(Locale.getDefault()).charAt(0));
+            avatar.setText(String.valueOf(message.getUsername().toUpperCase(Locale.getDefault()).charAt(0)));
         }
 
         return convertView;
