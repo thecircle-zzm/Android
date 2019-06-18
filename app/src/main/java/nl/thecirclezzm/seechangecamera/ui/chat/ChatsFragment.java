@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import nl.thecirclezzm.seechangecamera.R;
@@ -65,11 +66,12 @@ public class ChatsFragment extends Fragment {
                 e.printStackTrace();
             }
 
-            mSocket.onNewJsonEvent(EVENT_NEW_USER, (json) -> {
+            // No longer used on the back-end
+            /*mSocket.onNewJsonEvent(EVENT_NEW_USER, (json) -> {
                 JSONObject body = json.getJSONObject("user");
 
                 String username = body.getString("username");
-                MessageFormat format = new MessageFormat(null, username, null, currentRoom);
+                Message format = new Message(username, null, currentRoom);
 
                 // Run on UI Thread because we need to modify the views.
                 getActivity().runOnUiThread(() -> {
@@ -77,12 +79,20 @@ public class ChatsFragment extends Fragment {
                     messageListView.smoothScrollToPosition(0);
                     messageListView.scrollTo(0, messageAdapter.getCount() - 1);
                 });
-            });
+            });*/
 
             mSocket.onNewJsonEvent(EVENT_NEW_MESSAGE, (json) -> {
                 String username = json.getString("username");
                 String message = json.getString("message");
-                MessageFormat format = new MessageFormat(null, username, message, currentRoom);
+                Message.MessageType type;
+                if(Objects.equals(username, currentUsername)){
+                    type = Message.MessageType.SENT;
+                } else if(Objects.equals(username, "Channel")){
+                    type = Message.MessageType.CHANNEL;
+                } else {
+                    type = Message.MessageType.RECEIVED;
+                }
+                Message format = new Message(username, message, currentRoom, type);
 
                 // Run on UI Thread because we need to modify the views.
                 getActivity().runOnUiThread(() -> {
@@ -130,7 +140,7 @@ public class ChatsFragment extends Fragment {
                 // Disable the send button when the text field is empty.
                 boolean isEnabled = charSequence.toString().trim().length() > 0;
                 sendButton.setEnabled(isEnabled);
-                sendButton.setImageAlpha(isEnabled ? 127 : 255);
+                sendButton.setImageAlpha(isEnabled ? 255 : 100);
             }
 
             @Override
@@ -138,8 +148,8 @@ public class ChatsFragment extends Fragment {
         });
 
         messageListView = this.getView().findViewById(R.id.messageListView);
-        List<MessageFormat> messageFormatList = new ArrayList<>();
-        messageAdapter = new MessageAdapter(this.getContext(), R.layout.item_message, messageFormatList);
+        List<Message> messageList = new ArrayList<>();
+        messageAdapter = new MessageAdapter(this.getContext(), R.layout.item_message, messageList);
         messageListView.setAdapter(messageAdapter);
     }
 

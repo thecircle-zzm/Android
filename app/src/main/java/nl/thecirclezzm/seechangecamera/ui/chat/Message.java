@@ -5,51 +5,53 @@ import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
-public class MessageFormat {
+public class Message {
     private final String username;
     private final String message;
     private final String room;
-    private final String uniqueId;
+    private final MessageType type;
 
-    MessageFormat(@Nullable String uniqueId, @NonNull String username, @Nullable String message, @Nullable String room) {
+    enum MessageType { SENT, RECEIVED, CHANNEL }
+
+    Message(@NonNull String username, @NonNull String message, @NonNull String room, @NonNull MessageType messageType) {
         this.username = username;
         this.message = message;
-        this.uniqueId = uniqueId;
         this.room = room;
+        this.type = messageType;
     }
 
     @NonNull
-    String getUsername() {
+    public String getUsername() {
         return username;
     }
 
-    @Nullable
-    String getMessage() {
+    @NonNull
+    public String getMessage() {
         return message;
     }
 
-    @Nullable
-    String getUniqueId() {
-        return uniqueId;
+    @NonNull
+    public String getRoom() {
+        return room;
     }
 
-    @Nullable
-    String getRoom() {
-        return room;
+    @NonNull
+    public MessageType getType() {
+        return type;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MessageFormat that = (MessageFormat) o;
+        Message that = (Message) o;
         return username.equals(that.username) &&
                 Objects.equals(message, that.message) &&
-                Objects.equals(uniqueId, that.uniqueId);
+                Objects.equals(room, that.room);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(username, message, uniqueId);
+        return Objects.hash(username, message, room);
     }
 }

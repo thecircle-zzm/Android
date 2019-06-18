@@ -3,7 +3,6 @@ package nl.thecirclezzm.seechangecamera.ui.chat;
 import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -18,25 +17,22 @@ import java.util.Objects;
 
 import nl.thecirclezzm.seechangecamera.R;
 
-public class MessageAdapter extends ArrayAdapter<MessageFormat> {
-    public MessageAdapter(@NonNull Context context, int resource, @NonNull List<MessageFormat> objects) {
+public class MessageAdapter extends ArrayAdapter<Message> {
+    public MessageAdapter(@NonNull Context context, int resource, @NonNull List<Message> objects) {
         super(context, resource, objects);
     }
 
     @Override
     public @NonNull
     View getView(int position, @Nullable View convertView, @Nullable ViewGroup parent) {
-        MessageFormat message = getItem(position);
+        Message message = getItem(position);
 
-        if (message.getMessage() == null || TextUtils.isEmpty(message.getMessage())) {
+        if (message.getType() == Message.MessageType.CHANNEL) {
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.user_connected, parent, false);
 
             AppCompatTextView messageText = convertView.findViewById(R.id.message_body);
-
-            String userConnected = message.getUsername();
-            messageText.setText(userConnected);
-
-        } else if (Objects.equals(message.getUniqueId(), ChatsFragment.uniqueId)) {
+            messageText.setText(message.getMessage());
+        } else if (message.getType() == Message.MessageType.SENT) {
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.my_message, parent, false);
             AppCompatTextView messageText = convertView.findViewById(R.id.message_body);
             messageText.setText(message.getMessage());
