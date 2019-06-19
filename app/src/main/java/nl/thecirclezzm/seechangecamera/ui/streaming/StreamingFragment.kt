@@ -63,6 +63,8 @@ class StreamingFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
         viewModel = ViewModelProviders.of(this).get(StreamingViewModel::class.java)
+        viewModel.streamingUrl = activity?.intent?.getStringExtra("streamingUrl") ?: error("Streaming url is null")
     }
 }
