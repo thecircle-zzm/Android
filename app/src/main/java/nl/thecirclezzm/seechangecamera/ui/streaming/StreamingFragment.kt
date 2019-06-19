@@ -3,6 +3,7 @@ package nl.thecirclezzm.seechangecamera.ui.streaming
 import android.Manifest.permission.*
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import androidx.annotation.RequiresPermission
 import androidx.databinding.DataBindingUtil
@@ -48,8 +49,13 @@ class StreamingFragment : Fragment() {
                 @SuppressLint("MissingPermission")
                 override fun surfaceCreated(p0: SurfaceHolder?) {
                     cameraStream = StreamingCamera(surfaceView!!, StreamingCamera.Protocol.RTMP, viewModel).also {
+                        val resolutions = it.resolutionsBack
+                        resolutions.sortBy { it.width * it.height }
+                        val resolution = resolutions.firstOrNull {
+                            Math.max(it.width, it.height) >= 720 && Math.min(it.width, it.height) >= 480
+                        } ?: resolutions.last()
                         it.prepareAudio()
-                        it.prepareVideo()
+                        it.prepareVideo(resolution, 30, 1200 * 1024, true, 90)
                         surfaceView?.layoutParams = surfaceView?.layoutParams?.apply {
                             width = it.streamHeight
                             height = it.streamWidth
