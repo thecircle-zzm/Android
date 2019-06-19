@@ -3,7 +3,6 @@ package nl.thecirclezzm.seechangecamera.ui.chat;
 import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -18,37 +17,26 @@ import java.util.Objects;
 
 import nl.thecirclezzm.seechangecamera.R;
 
-public class MessageAdapter extends ArrayAdapter<MessageFormat> {
-    public MessageAdapter(@NonNull Context context, int resource, @NonNull List<MessageFormat> objects) {
+public class MessageAdapter extends ArrayAdapter<Message> {
+    public MessageAdapter(@NonNull Context context, int resource, @NonNull List<Message> objects) {
         super(context, resource, objects);
     }
 
     @Override
     public @NonNull
     View getView(int position, @Nullable View convertView, @Nullable ViewGroup parent) {
-        Log.i(ChatsFragment.TAG, "getView:");
+        Message message = getItem(position);
 
-        MessageFormat message = getItem(position);
-
-        if (TextUtils.isEmpty(message.getMessage())) {
+        if (message.getType() == Message.MessageType.CHANNEL) {
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.user_connected, parent, false);
 
             AppCompatTextView messageText = convertView.findViewById(R.id.message_body);
-
-            Log.i(ChatsFragment.TAG, "getView: is empty ");
-            String userConnected = message.getUsername();
-            messageText.setText(userConnected);
-
-        } else if (Objects.equals(message.getUniqueId(), ChatsFragment.uniqueId)) {
-            Log.i(ChatsFragment.TAG, "getView: " + message.getUniqueId() + " " + ChatsFragment.uniqueId);
-
+            messageText.setText(message.getMessage());
+        } else if (message.getType() == Message.MessageType.SENT) {
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.my_message, parent, false);
             AppCompatTextView messageText = convertView.findViewById(R.id.message_body);
             messageText.setText(message.getMessage());
-
         } else {
-            Log.i(ChatsFragment.TAG, "getView: is not empty");
-
             convertView = ((Activity) getContext()).getLayoutInflater().inflate(R.layout.their_message, parent, false);
 
             AppCompatTextView messageText = convertView.findViewById(R.id.message_body);
@@ -57,7 +45,7 @@ public class MessageAdapter extends ArrayAdapter<MessageFormat> {
 
             messageText.setText(message.getMessage());
             usernameText.setText(message.getUsername());
-            avatar.setText(message.getUsername().toUpperCase(Locale.getDefault()).charAt(0));
+            avatar.setText(String.valueOf(message.getUsername().toUpperCase(Locale.getDefault()).charAt(0)));
         }
 
         return convertView;
