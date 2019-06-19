@@ -1,2 +1,2 @@
-# The Circle: SeeChange camera [![Platform](https://img.shields.io/badge/Platform-Android%209%2B-brightgreen.svg)](https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels)
+# The Circle: SeeChange camera [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B-brightgreen.svg)](https://developer.android.com/guide/topics/manifest/uses-sdk-element#ApiLevels)
 Be sure to check out the [wiki](/../../wiki) of this project for information about code conventions and more.
