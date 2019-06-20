@@ -1,5 +1,8 @@
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,7 +49,7 @@ public abstract class VariableBodyRtmpPacket extends RtmpPacket {
         addData(new AmfBoolean(bool));
     }
 
-    public void addData(AmfData dataItem) {
+    public void addData(@Nullable AmfData dataItem) {
         if (data == null) {
             data = new ArrayList<>();
         }
@@ -56,7 +59,7 @@ public abstract class VariableBodyRtmpPacket extends RtmpPacket {
         data.add(dataItem);
     }
 
-    protected void readVariableData(final InputStream in, int bytesAlreadyRead) throws IOException {
+    protected void readVariableData(@NonNull final InputStream in, int bytesAlreadyRead) throws IOException {
         // ...now read in arguments (if any)
         do {
             AmfData dataItem = AmfDecoder.readFrom(in);
@@ -65,7 +68,7 @@ public abstract class VariableBodyRtmpPacket extends RtmpPacket {
         } while (bytesAlreadyRead < header.getPacketLength());
     }
 
-    protected void writeVariableData(final OutputStream out) throws IOException {
+    protected void writeVariableData(@NonNull final OutputStream out) throws IOException {
         if (data != null) {
             for (AmfData dataItem : data) {
                 dataItem.writeTo(out);

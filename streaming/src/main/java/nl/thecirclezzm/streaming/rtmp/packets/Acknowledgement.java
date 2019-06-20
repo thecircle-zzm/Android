@@ -1,5 +1,8 @@
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,15 +56,16 @@ public class Acknowledgement extends RtmpPacket {
     }
 
     @Override
-    public void readBody(InputStream in) throws IOException {
+    public void readBody(@NonNull InputStream in) throws IOException {
         sequenceNumber = Util.readUnsignedInt32(in);
     }
 
     @Override
-    protected void writeBody(OutputStream out) throws IOException {
+    protected void writeBody(@NonNull OutputStream out) throws IOException {
         Util.writeUnsignedInt32(out, sequenceNumber);
     }
 
+    @Nullable
     @Override
     protected byte[] array() {
         return null;
@@ -72,6 +76,7 @@ public class Acknowledgement extends RtmpPacket {
         return 0;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "RTMP Acknowledgment (sequence number: " + sequenceNumber + ")";

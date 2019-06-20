@@ -1,30 +1,33 @@
 package nl.thecirclezzm.seechangecamera.ui.streaming
 
+import android.app.Application
 import android.util.Log
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import nl.thecirclezzm.streaming.base.ConnectionCallbacks
+import nl.thecirclezzm.streaming.main.rtmp.RtmpCamera2
+import nl.thecirclezzm.streaming.rtmp.ConnectCheckerRtmp
 
-class StreamingViewModel : ViewModel(), ConnectionCallbacks {
-    val streamingUrl = "rtmp://188.166.38.127:1935/live/a37b62f8ea0d838d"
+class StreamingViewModel(application: Application) : AndroidViewModel(application), ConnectCheckerRtmp {
+    lateinit var streamingUrl: String
 
-    override fun onConnectionSuccess() {
+    override fun onConnectionSuccessRtmp() {
         Log.i("Stream", "Connection success")
     }
 
-    override fun onConnectionFailed(reason: String?) {
+    override fun onConnectionFailedRtmp(reason: String?) {
         Log.e("Stream", "Connection failed: $reason")
     }
 
-    override fun onDisconnect() {
+    override fun onDisconnectRtmp() {
         Log.i("Stream", "Disconnected")
     }
 
-    override fun onAuthError() {
+    override fun onAuthErrorRtmp() {
         Log.e("Stream", "Authentication failed")
     }
 
-    override fun onAuthSuccess() {
+    override fun onAuthSuccessRtmp() {
         Log.i("Stream", "Authentication succeeded")
     }
-
 }

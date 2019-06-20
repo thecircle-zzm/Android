@@ -1,10 +1,13 @@
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import android.util.SparseArray;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import nl.thecirclezzm.streaming.rtmp.Util;
 import nl.thecirclezzm.streaming.rtmp.io.ChunkStreamInfo;
@@ -52,17 +55,18 @@ public class SetPeerBandwidth extends RtmpPacket {
     }
 
     @Override
-    public void readBody(InputStream in) throws IOException {
+    public void readBody(@NonNull InputStream in) throws IOException {
         acknowledgementWindowSize = Util.readUnsignedInt32(in);
         limitType = LimitType.valueOf(in.read());
     }
 
     @Override
-    protected void writeBody(OutputStream out) throws IOException {
+    protected void writeBody(@NonNull OutputStream out) throws IOException {
         Util.writeUnsignedInt32(out, acknowledgementWindowSize);
         out.write(limitType.getIntValue());
     }
 
+    @Nullable
     @Override
     protected byte[] array() {
         return null;
@@ -73,6 +77,7 @@ public class SetPeerBandwidth extends RtmpPacket {
         return 0;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "RTMP Set Peer Bandwidth";
@@ -96,7 +101,7 @@ public class SetPeerBandwidth extends RtmpPacket {
          * In a dynamic (2) request, the bandwidth can be hard or soft.
          */
         DYNAMIC(2);
-        private static final Map<Integer, LimitType> quickLookupMap = new HashMap<>();
+        private static final SparseArray<LimitType> quickLookupMap = new SparseArray<>();
 
         static {
             for (LimitType type : LimitType.values()) {

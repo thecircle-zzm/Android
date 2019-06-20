@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.encoder.utils.yuv;
 
+import androidx.annotation.NonNull;
+
 /**
  * Created by pedro on 31/10/18.
  */
@@ -14,6 +16,7 @@ public class NV21Utils {
         preAllocatedBufferColor = new byte[length];
     }
 
+    @NonNull
     public static int[] toARGB(byte[] yuv, int width, int height) {
         int[] argb = new int[width * height];
         final int frameSize = width * height;
@@ -25,7 +28,7 @@ public class NV21Utils {
         for (int i = 0, ci = ii; i < height; ++i, ci += di) {
             for (int j = 0, cj = ij; j < width; ++j, cj += dj) {
                 int y = (0xff & ((int) yuv[ci * width + cj]));
-                int v = (0xff & ((int) yuv[frameSize + (ci >> 1) * width + (cj & ~1) + 0]));
+                int v = (0xff & ((int) yuv[frameSize + (ci >> 1) * width + (cj & ~1)]));
                 int u = (0xff & ((int) yuv[frameSize + (ci >> 1) * width + (cj & ~1) + 1]));
                 y = y < 16 ? 16 : y;
                 int r = (int) (1.164f * (y - 16) + 1.596f * (v - 128));
@@ -40,7 +43,7 @@ public class NV21Utils {
         return argb;
     }
 
-    public static byte[] toYV12(byte[] input, int width, int height) {
+    public static byte[] toYV12(@NonNull byte[] input, int width, int height) {
         final int frameSize = width * height;
         final int qFrameSize = frameSize / 4;
         System.arraycopy(input, 0, preAllocatedBufferColor, 0, frameSize); // Y
@@ -52,7 +55,7 @@ public class NV21Utils {
     }
 
     // the color transform, @see http://stackoverflow.com/questions/15739684/mediacodec-and-camera-color-space-incorrect
-    public static byte[] toNV12(byte[] input, int width, int height) {
+    public static byte[] toNV12(@NonNull byte[] input, int width, int height) {
         final int frameSize = width * height;
         final int qFrameSize = frameSize / 4;
         System.arraycopy(input, 0, preAllocatedBufferColor, 0, frameSize); // Y
@@ -63,7 +66,7 @@ public class NV21Utils {
         return preAllocatedBufferColor;
     }
 
-    public static byte[] toI420(byte[] input, int width, int height) {
+    public static byte[] toI420(@NonNull byte[] input, int width, int height) {
         final int frameSize = width * height;
         final int qFrameSize = frameSize / 4;
         System.arraycopy(input, 0, preAllocatedBufferColor, 0, frameSize); // Y
@@ -128,6 +131,7 @@ public class NV21Utils {
         return preAllocatedBufferRotate;
     }
 
+    @NonNull
     public static byte[] rotatePixels(byte[] input, int width, int height, int rotation) {
         byte[] output = new byte[input.length];
 
@@ -137,27 +141,27 @@ public class NV21Utils {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 int xo = x, yo = y;
-                int w = width, h = height;
+                int w = width;
                 int xi = xo, yi = yo;
                 if (swap) {
-                    xi = w * yo / h;
-                    yi = h * xo / w;
+                    xi = w * yo / height;
+                    yi = height * xo / w;
                 }
                 if (yflip) {
-                    yi = h - yi - 1;
+                    yi = height - yi - 1;
                 }
                 if (xflip) {
                     xi = w - xi - 1;
                 }
                 output[w * yo + xo] = input[w * yi + xi];
-                int fs = w * h;
+                int fs = w * height;
                 int qs = (fs >> 2);
                 xi = (xi >> 1);
                 yi = (yi >> 1);
                 xo = (xo >> 1);
                 yo = (yo >> 1);
                 w = (w >> 1);
-                h = (h >> 1);
+                // h = (h >> 1);
                 // adjust for interleave here
                 int ui = fs + (w * yi + xi) * 2;
                 int uo = fs + (w * yo + xo) * 2;
@@ -171,24 +175,25 @@ public class NV21Utils {
         return output;
     }
 
+    @NonNull
     public static byte[] mirror(byte[] input, int width, int height) {
         byte[] output = new byte[input.length];
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 int xo = x, yo = y;
-                int w = width, h = height;
+                int w = width;
                 int xi = xo, yi = yo;
-                yi = h - yi - 1;
+                yi = height - yi - 1;
                 output[w * yo + xo] = input[w * yi + xi];
-                int fs = w * h;
+                int fs = w * height;
                 int qs = (fs >> 2);
                 xi = (xi >> 1);
                 yi = (yi >> 1);
                 xo = (xo >> 1);
                 yo = (yo >> 1);
                 w = (w >> 1);
-                h = (h >> 1);
+                // h = (h >> 1);
                 // adjust for interleave here
                 int ui = fs + (w * yi + xi) * 2;
                 int uo = fs + (w * yo + xo) * 2;

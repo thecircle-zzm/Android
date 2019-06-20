@@ -25,7 +25,7 @@ public class CameraHelper {
         return verticesData;
     }
 
-    public static int getCameraOrientation(@NonNull Context context) {
+    public static int getCameraOrientation(Context context) {
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         if (windowManager != null) {
             int orientation = windowManager.getDefaultDisplay().getRotation();

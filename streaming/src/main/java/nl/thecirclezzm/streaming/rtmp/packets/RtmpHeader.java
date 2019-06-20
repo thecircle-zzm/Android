@@ -4,12 +4,14 @@
  */
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import android.util.SparseArray;
+
+import androidx.annotation.NonNull;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import nl.thecirclezzm.streaming.rtmp.Util;
 import nl.thecirclezzm.streaming.rtmp.io.ChunkStreamInfo;
@@ -39,14 +41,15 @@ public class RtmpHeader {
         this.messageType = messageType;
     }
 
-    public static RtmpHeader readHeader(InputStream in, RtmpSessionInfo rtmpSessionInfo)
+    @NonNull
+    public static RtmpHeader readHeader(@NonNull InputStream in, @NonNull RtmpSessionInfo rtmpSessionInfo)
             throws IOException {
         RtmpHeader rtmpHeader = new RtmpHeader();
         rtmpHeader.readHeaderImpl(in, rtmpSessionInfo);
         return rtmpHeader;
     }
 
-    private void readHeaderImpl(InputStream in, RtmpSessionInfo rtmpSessionInfo) throws IOException {
+    private void readHeaderImpl(InputStream in, @NonNull RtmpSessionInfo rtmpSessionInfo) throws IOException {
 
         int basicHeaderByte = in.read();
         if (basicHeaderByte == -1) {
@@ -84,7 +87,7 @@ public class RtmpHeader {
                 messageType = MessageType.valueOf((byte) in.read());
                 // Read bytes 1-4: Extended timestamp delta
                 extendedTimestamp = timestampDelta >= 0xffffff ? Util.readUnsignedInt32(in) : 0;
-                RtmpHeader prevHeader = rtmpSessionInfo.getChunkStreamInfo(chunkStreamId).prevHeaderRx();
+                RtmpHeader prevHeader = rtmpSessionInfo.getChunkStreamInfo(chunkStreamId).getPrevHeaderRx();
                 if (prevHeader != null) {
                     messageStreamId = prevHeader.messageStreamId;
                     absoluteTimestamp = extendedTimestamp != 0 ? extendedTimestamp
@@ -100,7 +103,7 @@ public class RtmpHeader {
                 timestampDelta = Util.readUnsignedInt24(in);
                 // Read bytes 1-4: Extended timestamp delta
                 extendedTimestamp = timestampDelta >= 0xffffff ? Util.readUnsignedInt32(in) : 0;
-                RtmpHeader prevHeader = rtmpSessionInfo.getChunkStreamInfo(chunkStreamId).prevHeaderRx();
+                RtmpHeader prevHeader = rtmpSessionInfo.getChunkStreamInfo(chunkStreamId).getPrevHeaderRx();
                 packetLength = prevHeader.packetLength;
                 messageType = prevHeader.messageType;
                 messageStreamId = prevHeader.messageStreamId;
@@ -109,7 +112,7 @@ public class RtmpHeader {
                 break;
             }
             case TYPE_3_RELATIVE_SINGLE_BYTE: { // b11 = 1 byte: basic header only
-                RtmpHeader prevHeader = rtmpSessionInfo.getChunkStreamInfo(chunkStreamId).prevHeaderRx();
+                RtmpHeader prevHeader = rtmpSessionInfo.getChunkStreamInfo(chunkStreamId).getPrevHeaderRx();
                 // Read bytes 1-4: Extended timestamp
                 extendedTimestamp = prevHeader.timestampDelta >= 0xffffff ? Util.readUnsignedInt32(in) : 0;
                 timestampDelta = extendedTimestamp != 0 ? 0xffffff : prevHeader.timestampDelta;
@@ -126,7 +129,7 @@ public class RtmpHeader {
         }
     }
 
-    public void writeTo(OutputStream out, ChunkType chunkType, final ChunkStreamInfo chunkStreamInfo)
+    public void writeTo(@NonNull OutputStream out, @NonNull ChunkType chunkType, @NonNull final ChunkStreamInfo chunkStreamInfo)
             throws IOException {
         // Write basic header byte
         out.write(((byte) (chunkType.getValue() << 6) | chunkStreamId));
@@ -362,7 +365,7 @@ public class RtmpHeader {
          * An aggregate message is a single message that contains a list of sub-messages.
          */
         AGGREGATE_MESSAGE(0x16);
-        private static final Map<Byte, MessageType> quickLookupMap = new HashMap<>();
+        private static final SparseArray<MessageType> quickLookupMap = new SparseArray<>();
 
         static {
             for (MessageType messageTypId : MessageType.values()) {
@@ -377,7 +380,7 @@ public class RtmpHeader {
         }
 
         public static MessageType valueOf(byte messageTypeId) {
-            if (quickLookupMap.containsKey(messageTypeId)) {
+            if (quickLookupMap.get(messageTypeId) != null) {
                 return quickLookupMap.get(messageTypeId);
             } else {
                 throw new IllegalArgumentException(
@@ -414,7 +417,7 @@ public class RtmpHeader {
         /**
          * The full size (in bytes) of this RTMP header (including the basic header byte)
          */
-        private static final Map<Byte, ChunkType> quickLookupMap = new HashMap<>();
+        private static final SparseArray<ChunkType> quickLookupMap = new SparseArray<>();
 
         static {
             for (ChunkType messageTypId : ChunkType.values()) {
@@ -432,7 +435,7 @@ public class RtmpHeader {
         }
 
         public static ChunkType valueOf(byte chunkHeaderType) {
-            if (quickLookupMap.containsKey(chunkHeaderType)) {
+            if (quickLookupMap.get(chunkHeaderType) != null) {
                 return quickLookupMap.get(chunkHeaderType);
             } else {
                 throw new IllegalArgumentException(

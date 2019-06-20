@@ -1,5 +1,6 @@
 package nl.thecirclezzm.seechangecamera.ui.chat;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -29,16 +30,13 @@ import nl.thecirclezzm.seechangecamera.R;
 import nl.thecirclezzm.seechangecamera.utils.SocketIO;
 
 public class ChatsFragment extends Fragment {
-    static final String TAG = "ChatsFragment";
-
     private static final String EVENT_NEW_MESSAGE = "sendMessage";
     private static final String EVENT_NEW_USER = "join";
-    private SocketIO mSocket = new SocketIO("http://188.166.38.127:5000");
+    private SocketIO mSocket;
 
-    static String uniqueId;
     private String currentUsername;
     private String currentRoom;
-    private ListView messageListView;
+
     private MessageAdapter messageAdapter;
 
     public static @NonNull ChatsFragment newInstance() {
@@ -54,10 +52,10 @@ public class ChatsFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        currentUsername = ChatsFragment.this.getActivity().getIntent().getStringExtra("username");
-        currentRoom = "1";
-
-        uniqueId = UUID.randomUUID().toString();
+        Intent intent = getActivity().getIntent();
+        currentUsername = intent.getStringExtra("username");
+        currentRoom = intent.getStringExtra("roomId");
+        mSocket = new SocketIO(intent.getStringExtra("chatsUrl"));
 
         if (savedInstanceState == null || !savedInstanceState.getBoolean("hasConnection")) {
             try {
@@ -65,21 +63,6 @@ public class ChatsFragment extends Fragment {
             } catch (URISyntaxException e) {
                 e.printStackTrace();
             }
-
-            // No longer used on the back-end
-            /*mSocket.onNewJsonEvent(EVENT_NEW_USER, (json) -> {
-                JSONObject body = json.getJSONObject("user");
-
-                String username = body.getString("username");
-                Message format = new Message(username, null, currentRoom);
-
-                // Run on UI Thread because we need to modify the views.
-                getActivity().runOnUiThread(() -> {
-                    messageAdapter.add(format);
-                    messageListView.smoothScrollToPosition(0);
-                    messageListView.scrollTo(0, messageAdapter.getCount() - 1);
-                });
-            });*/
 
             mSocket.onNewJsonEvent(EVENT_NEW_MESSAGE, (json) -> {
                 String username = json.getString("username");
@@ -147,7 +130,7 @@ public class ChatsFragment extends Fragment {
             public void afterTextChanged(Editable editable) {}
         });
 
-        messageListView = this.getView().findViewById(R.id.messageListView);
+        ListView messageListView = this.getView().findViewById(R.id.messageListView);
         List<Message> messageList = new ArrayList<>();
         messageAdapter = new MessageAdapter(this.getContext(), R.layout.item_message, messageList);
         messageListView.setAdapter(messageAdapter);

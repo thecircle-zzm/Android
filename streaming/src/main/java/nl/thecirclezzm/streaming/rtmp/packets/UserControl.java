@@ -1,10 +1,13 @@
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import android.util.SparseArray;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
-import java.util.Map;
 
 import nl.thecirclezzm.streaming.rtmp.Util;
 import nl.thecirclezzm.streaming.rtmp.io.ChunkStreamInfo;
@@ -34,12 +37,12 @@ public class UserControl extends RtmpPacket {
     /**
      * Convenience construtor that creates a "pong" message for the specified ping
      */
-    public UserControl(UserControl replyToPing, ChunkStreamInfo channelInfo) {
+    public UserControl(UserControl replyToPing, @NonNull ChunkStreamInfo channelInfo) {
         this(Type.PONG_REPLY, channelInfo);
         this.eventData = replyToPing.eventData;
     }
 
-    public UserControl(Type type, ChunkStreamInfo channelInfo) {
+    public UserControl(Type type, @NonNull ChunkStreamInfo channelInfo) {
         this(channelInfo);
         this.type = type;
     }
@@ -89,7 +92,7 @@ public class UserControl extends RtmpPacket {
     }
 
     @Override
-    public void readBody(InputStream in) throws IOException {
+    public void readBody(@NonNull InputStream in) throws IOException {
         // Bytes 0-1: first parameter: ping type (mandatory)
         type = Type.valueOf(Util.readUnsignedInt16(in));
         int bytesRead = 2;
@@ -102,11 +105,12 @@ public class UserControl extends RtmpPacket {
             bytesRead += 4;
         }
         // To ensure some strange non-specified UserControl/ping message does not slip through
-        assert header.getPacketLength() == bytesRead;
+        if (header.getPacketLength() != bytesRead)
+            throw new AssertionError();
     }
 
     @Override
-    protected void writeBody(OutputStream out) throws IOException {
+    protected void writeBody(@NonNull OutputStream out) throws IOException {
         // Write the user control message type
         Util.writeUnsignedInt16(out, type.getIntValue());
         // Now write the event data
@@ -116,6 +120,7 @@ public class UserControl extends RtmpPacket {
         }
     }
 
+    @Nullable
     @Override
     protected byte[] array() {
         return null;
@@ -126,6 +131,7 @@ public class UserControl extends RtmpPacket {
         return 0;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "RTMP User Control (type: " + type + ", event data: " + eventData + ")";
@@ -242,7 +248,7 @@ public class UserControl extends RtmpPacket {
          */
         BUFFER_READY(32);
 
-        private static final Map<Integer, Type> quickLookupMap = new HashMap<Integer, Type>();
+        private static final SparseArray<Type> quickLookupMap = new SparseArray<>();
 
         static {
             for (Type type : Type.values()) {

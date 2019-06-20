@@ -2,6 +2,9 @@ package nl.thecirclezzm.streaming.rtmp;
 
 import android.util.Base64;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -76,7 +79,8 @@ public class Util {
         return ((bytes[2] & 0xff) << 8) | (bytes[3] & 0xff);
     }
 
-    public static String toHexString(byte[] raw) {
+    @Nullable
+    public static String toHexString(@Nullable byte[] raw) {
         if (raw == null) {
             return null;
         }
@@ -88,9 +92,8 @@ public class Util {
     }
 
     public static String toHexString(byte b) {
-        return new StringBuilder().append(HEXES.charAt((b & 0xF0) >> 4))
-                .append(HEXES.charAt((b & 0x0F)))
-                .toString();
+        return String.valueOf(HEXES.charAt((b & 0xF0) >> 4)) +
+                HEXES.charAt((b & 0x0F));
     }
 
     /**
@@ -119,7 +122,7 @@ public class Util {
         };
     }
 
-    public static byte[] unsignedInt32ToByteArray(int value) throws IOException {
+    public static byte[] unsignedInt32ToByteArray(int value) {
         return new byte[]{
                 (byte) (value >>> 24), (byte) (value >>> 16), (byte) (value >>> 8), (byte) value
         };
@@ -148,6 +151,7 @@ public class Util {
         });
     }
 
+    @Nullable
     public static String getSalt(String description) {
         String salt = null;
         String[] data = description.split("&");
@@ -160,6 +164,7 @@ public class Util {
         return salt;
     }
 
+    @Nullable
     public static String getChallenge(String description) {
         String challenge = null;
         String[] data = description.split("&");
@@ -172,6 +177,7 @@ public class Util {
         return challenge;
     }
 
+    @NonNull
     public static String getOpaque(String description) {
         String opaque = "";
         String[] data = description.split("&");
@@ -184,7 +190,7 @@ public class Util {
         return opaque;
     }
 
-    public static String stringToMD5BASE64(String s) {
+    public static String stringToMD5BASE64(@NonNull String s) {
         try {
             MessageDigest md = MessageDigest.getInstance("MD5");
             md.update(s.getBytes(StandardCharsets.UTF_8), 0, s.length());

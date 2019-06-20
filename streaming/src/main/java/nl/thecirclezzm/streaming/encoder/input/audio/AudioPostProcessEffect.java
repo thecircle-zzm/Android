@@ -5,6 +5,8 @@ import android.media.audiofx.AutomaticGainControl;
 import android.media.audiofx.NoiseSuppressor;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 /**
  * Created by pedro on 11/05/17.
  */
@@ -13,9 +15,12 @@ public class AudioPostProcessEffect {
 
     private final String TAG = "AudioPostProcessEffect";
 
-    private int microphoneId;
+    private final int microphoneId;
+    @Nullable
     private AcousticEchoCanceler acousticEchoCanceler = null;
+    @Nullable
     private AutomaticGainControl automaticGainControl = null;
+    @Nullable
     private NoiseSuppressor noiseSuppressor = null;
 
     public AudioPostProcessEffect(int microphoneId) {
