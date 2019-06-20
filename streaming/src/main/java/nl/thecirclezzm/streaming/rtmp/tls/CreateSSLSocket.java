@@ -1,6 +1,8 @@
-package nl.thecirclezzm.streaming.rtmp.ossrs;
+package nl.thecirclezzm.streaming.rtmp.tls;
 
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -24,7 +26,7 @@ public class CreateSSLSocket {
         try {
             TLSSocketFactory socketFactory = new TLSSocketFactory();
             return socketFactory.createSocket(host, port);
-        } catch (NoSuchAlgorithmException | KeyManagementException | IOException e) {
+        } catch (@NonNull NoSuchAlgorithmException | KeyManagementException | IOException e) {
             Log.e("CreateSSLSocket", "Error", e);
             return null;
         }

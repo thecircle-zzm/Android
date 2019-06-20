@@ -1,10 +1,11 @@
-package nl.thecirclezzm.streaming;
+package nl.thecirclezzm.streaming.main.base;
 
-import android.Manifest;
 import android.content.Context;
 import android.hardware.camera2.CameraCharacteristics;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
+import android.os.Build;
+import android.util.Size;
 import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceView;
@@ -12,122 +13,143 @@ import android.view.TextureView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresPermission;
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.OnLifecycleEvent;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
 
-import nl.thecirclezzm.streaming.base.ConnectionCallbacks;
-import nl.thecirclezzm.streaming.base.StreamStats;
-import nl.thecirclezzm.streaming.base.StreamingProtocol;
 import nl.thecirclezzm.streaming.encoder.audio.AudioEncoder;
 import nl.thecirclezzm.streaming.encoder.audio.GetAacData;
 import nl.thecirclezzm.streaming.encoder.input.audio.GetMicrophoneData;
 import nl.thecirclezzm.streaming.encoder.input.audio.MicrophoneManager;
-import nl.thecirclezzm.streaming.encoder.input.video.CameraApiManager;
+import nl.thecirclezzm.streaming.encoder.input.video.Camera2ApiManager;
 import nl.thecirclezzm.streaming.encoder.input.video.CameraHelper;
 import nl.thecirclezzm.streaming.encoder.input.video.CameraOpenException;
 import nl.thecirclezzm.streaming.encoder.utils.CodecUtil;
 import nl.thecirclezzm.streaming.encoder.video.FormatVideoEncoder;
 import nl.thecirclezzm.streaming.encoder.video.GetVideoData;
 import nl.thecirclezzm.streaming.encoder.video.VideoEncoder;
+import nl.thecirclezzm.streaming.main.view.GlInterface;
+import nl.thecirclezzm.streaming.main.view.LightOpenGlView;
+import nl.thecirclezzm.streaming.main.view.OffScreenGlThread;
+import nl.thecirclezzm.streaming.main.view.OpenGlView;
 
 /**
- * Wrapper to stream with camera2 api and microphone. Support stream with SurfaceView, TextureView.
- * All views use Surface to buffer encoding mode for H264.
+ * Wrapper to stream with camera2 api and microphone. Support stream with SurfaceView, TextureView,
+ * OpenGlView(Custom SurfaceView that use OpenGl) and Context(background mode). All views use
+ * Surface to buffer encoding mode for H264.
+ * <p>
+ * API requirements:
+ * API 21+.
+ * <p>
+ * Created by pedro on 7/07/17.
  */
-public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneData, LifecycleObserver {
-    public static final int ORIENTATION_LANDSCAPE = 0;
-    public static final int ORIENTATION_PORTRAIT = 90;
-    public static final int ORIENTATION_LANDSCAPE_INV = 180;
-    public static final int ORIENTATION_PORTRAIT_INV = 270;
-    @NonNull
-    private Context context;
-    private VideoEncoder videoEncoder;
-    private StreamingProtocol streamingProtocol;
-    private CameraApiManager cameraManager;
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+public abstract class Camera2Base implements GetAacData, GetVideoData, GetMicrophoneData, LifecycleObserver {
+
+    protected final Context context;
+    protected VideoEncoder videoEncoder;
+    private Camera2ApiManager cameraManager;
     private MicrophoneManager microphoneManager;
     private AudioEncoder audioEncoder;
     private boolean streaming = false;
     private SurfaceView surfaceView;
     private TextureView textureView;
+    private GlInterface glInterface;
     private boolean videoEnabled = false;
     private boolean onPreview = false;
     private boolean isBackground = false;
     private RecordController recordController;
     private int previewWidth, previewHeight;
 
-    @RequiresPermission(value = Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    public StreamingCamera(@NonNull SurfaceView surfaceView, @NonNull StreamingProtocol streamingProtocol) {
-        this.streamingProtocol = streamingProtocol;
+    public Camera2Base(SurfaceView surfaceView) {
         this.surfaceView = surfaceView;
-        this.context = surfaceView.getContext().getApplicationContext();
-        init();
+        this.context = surfaceView.getContext();
+        init(context);
     }
 
-    @RequiresPermission(value = Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    public StreamingCamera(@NonNull TextureView textureView, @NonNull StreamingProtocol streamingProtocol) {
-        this.streamingProtocol = streamingProtocol;
+    public Camera2Base(TextureView textureView) {
         this.textureView = textureView;
-        this.context = textureView.getContext().getApplicationContext();
-        init();
+        this.context = textureView.getContext();
+        init(context);
     }
 
-    @RequiresPermission(value = Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    public StreamingCamera(@NonNull SurfaceView surfaceView, @NonNull Protocol streamingProtocol, @NonNull ConnectionCallbacks connectionCallbacks) {
-        this.streamingProtocol = new RtmpProtocol(connectionCallbacks);
-        this.surfaceView = surfaceView;
-        this.context = surfaceView.getContext().getApplicationContext();
-        init();
+    public Camera2Base(OpenGlView openGlView) {
+        context = openGlView.getContext();
+        glInterface = openGlView;
+        glInterface.init();
+        init(context);
     }
 
-    @RequiresPermission(value = Manifest.permission.WRITE_EXTERNAL_STORAGE)
-    public StreamingCamera(@NonNull TextureView textureView, @NonNull Protocol streamingProtocol, @NonNull ConnectionCallbacks connectionCallbacks) {
-        this.streamingProtocol = new RtmpProtocol(connectionCallbacks);
-        this.textureView = textureView;
-        this.context = textureView.getContext().getApplicationContext();
-        init();
+    public Camera2Base(LightOpenGlView lightOpenGlView) {
+        this.context = lightOpenGlView.getContext();
+        glInterface = lightOpenGlView;
+        glInterface.init();
+        init(context);
     }
 
-    private void init() {
-        cameraManager = new CameraApiManager(this.context);
+    public Camera2Base(@NonNull Context context, boolean useOpengl) {
+        this.context = context;
+        if (useOpengl) {
+            glInterface = new OffScreenGlThread(context);
+            glInterface.init();
+        }
+        isBackground = true;
+        init(context);
+    }
+
+    private void init(@NonNull Context context) {
+        cameraManager = new Camera2ApiManager(context);
         videoEncoder = new VideoEncoder(this);
         microphoneManager = new MicrophoneManager(this);
         audioEncoder = new AudioEncoder(this);
         recordController = new RecordController();
     }
 
+    /**
+     * Experimental
+     */
+    public void enableFaceDetection(Camera2ApiManager.FaceDetectorCallback faceDetectorCallback) {
+        cameraManager.enableFaceDetection(faceDetectorCallback);
+    }
+
+    /**
+     * Experimental
+     */
+    public void disableFaceDetection() {
+        cameraManager.disableFaceDetection();
+    }
+
+    /**
+     * Experimental
+     */
+    public boolean isFaceDetectionEnabled() {
+        return cameraManager.isFaceDetectionEnabled();
+    }
+
     public boolean isFrontCamera() {
         return cameraManager.isFrontCamera();
     }
 
-    /**
-     * @required: <uses-permission android:name="android.permission.FLASHLIGHT"/>
-     */
-    @NonNull
-    public Latern getLatern() {
-        return new Latern();
+    public void enableLantern() throws Exception {
+        cameraManager.enableLantern();
     }
 
-    public class Latern {
-        public void enable() throws Exception {
-            cameraManager.enableLantern();
-        }
+    public void disableLantern() {
+        cameraManager.disableLantern();
+    }
 
-        public void disable() {
-            cameraManager.disableLantern();
-        }
+    public boolean isLanternEnabled() {
+        return cameraManager.isLanternEnabled();
+    }
 
-        public boolean isEnabled() {
-            return cameraManager.isLanternEnabled();
-        }
-
-        public boolean isSupported() {
-            return cameraManager.isLanternSupported();
-        }
+    public boolean isLanternSupported() {
+        return cameraManager.isLanternSupported();
     }
 
     /**
@@ -136,14 +158,13 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      * @param user     auth.
      * @param password auth.
      */
-    public void setAuthorization(String user, String password) {
-        streamingProtocol.setAuthorization(user, password);
-    }
+    public abstract void setAuthorization(String user, String password);
 
     /**
      * Call this method before use @startStream. If not you will do a stream without video.
      *
-     * @param sizePixels       resolution in px.
+     * @param width            resolution in px.
+     * @param height           resolution in px.
      * @param fps              frames per second of the stream.
      * @param bitrate          H264 in kb.
      * @param hardwareRotation true if you want rotate using encoder, false if you with OpenGl if you
@@ -154,15 +175,14 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      * @return true if success, false if you get a error (Normally because the encoder selected
      * doesn't support any configuration seated or your device hasn't a H264 encoder).
      */
-    @RequiresPermission(value = Manifest.permission.CAMERA)
-    public boolean prepareVideo(@NonNull SizePixels sizePixels, int fps, int bitrate, boolean hardwareRotation,
+    public boolean prepareVideo(int width, int height, int fps, int bitrate, boolean hardwareRotation,
                                 int iFrameInterval, int rotation) {
-        if (onPreview && !(sizePixels.getWidth() == previewWidth && sizePixels.getHeight() == previewHeight)) {
+        if (onPreview && !(glInterface != null && width == previewWidth && height == previewHeight)) {
             stopPreview();
             onPreview = true;
         }
         boolean result =
-                videoEncoder.prepareVideoEncoder(sizePixels, fps, bitrate, rotation, hardwareRotation,
+                videoEncoder.prepareVideoEncoder(width, height, fps, bitrate, rotation, hardwareRotation,
                         iFrameInterval, FormatVideoEncoder.SURFACE);
         prepareCameraManager();
         return result;
@@ -171,11 +191,12 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
     /**
      * backward compatibility reason
      */
-    @RequiresPermission(value = Manifest.permission.CAMERA)
-    public boolean prepareVideo(@NonNull SizePixels sizePixels, int fps, int bitrate, boolean hardwareRotation,
+    public boolean prepareVideo(int width, int height, int fps, int bitrate, boolean hardwareRotation,
                                 int rotation) {
-        return prepareVideo(sizePixels, fps, bitrate, hardwareRotation, 2, rotation);
+        return prepareVideo(width, height, fps, bitrate, hardwareRotation, 2, rotation);
     }
+
+    protected abstract void prepareAudioRtp(boolean isStereo, int sampleRate);
 
     /**
      * Call this method before use @startStream. If not you will do a stream without audio.
@@ -189,25 +210,25 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      * @return true if success, false if you get a error (Normally because the encoder selected
      * doesn't support any configuration seated or your device hasn't a AAC encoder).
      */
-    @RequiresPermission(value = Manifest.permission.RECORD_AUDIO)
-    public boolean prepareAudio(int bitrate, @NonNull SampleRate sampleRate, boolean isStereo, boolean echoCanceler,
+    public boolean prepareAudio(int bitrate, int sampleRate, boolean isStereo, boolean echoCanceler,
                                 boolean noiseSuppressor) {
-        microphoneManager.createMicrophone(sampleRate.n, isStereo, echoCanceler, noiseSuppressor);
-        streamingProtocol.prepareAudio(isStereo, sampleRate.n);
-        return audioEncoder.prepareAudioEncoder(bitrate, sampleRate.n, isStereo);
+        microphoneManager.createMicrophone(sampleRate, isStereo, echoCanceler, noiseSuppressor);
+        prepareAudioRtp(isStereo, sampleRate);
+        return audioEncoder.prepareAudioEncoder(bitrate, sampleRate, isStereo,
+                microphoneManager.getMaxInputSize());
     }
 
     /**
      * Same to call: isHardwareRotation = true; if (openGlVIew) isHardwareRotation = false;
-     * prepareVideo((640, 480), 30, 1200 * 1024, isHardwareRotation, 90);
+     * prepareVideo(640, 480, 30, 1200 * 1024, isHardwareRotation, 90);
      *
      * @return true if success, false if you get a error (Normally because the encoder selected
      * doesn't support any configuration seated or your device hasn't a H264 encoder).
      */
-    @RequiresPermission(value = Manifest.permission.CAMERA)
     public boolean prepareVideo() {
+        boolean isHardwareRotation = glInterface == null;
         int rotation = CameraHelper.getCameraOrientation(context);
-        return prepareVideo(new SizePixels(640, 480), 30, 1200 * 1024, true, rotation);
+        return prepareVideo(640, 480, 30, 1200 * 1024, isHardwareRotation, rotation);
     }
 
     /**
@@ -216,16 +237,15 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      * @return true if success, false if you get a error (Normally because the encoder selected
      * doesn't support any configuration seated or your device hasn't a AAC encoder).
      */
-    @RequiresPermission(value = Manifest.permission.RECORD_AUDIO)
     public boolean prepareAudio() {
-        return prepareAudio(64 * 1024, SampleRate.sr32, true, false, false);
+        return prepareAudio(64 * 1024, 32000, true, false, false);
     }
 
     /**
      * @param forceVideo force type codec used. FIRST_COMPATIBLE_FOUND, SOFTWARE, HARDWARE
      * @param forceAudio force type codec used. FIRST_COMPATIBLE_FOUND, SOFTWARE, HARDWARE
      */
-    public void setForce(@NonNull CodecUtil.Force forceVideo, @NonNull CodecUtil.Force forceAudio) {
+    public void setForce(CodecUtil.Force forceVideo, CodecUtil.Force forceAudio) {
         videoEncoder.setForce(forceVideo);
         audioEncoder.setForce(forceAudio);
     }
@@ -236,7 +256,7 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      * @param path where file will be saved.
      * @throws IOException If you init it before start stream.
      */
-    public void startRecord(@NonNull String path, @Nullable RecordController.Listener listener) throws IOException {
+    public void startRecord(@NonNull String path, RecordController.Listener listener) throws IOException {
         recordController.startRecord(path, listener);
         if (!streaming) {
             startEncoders();
@@ -245,7 +265,7 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
         }
     }
 
-    public void startRecord(final @NonNull String path) throws IOException {
+    public void startRecord(@NonNull final String path) throws IOException {
         startRecord(path, null);
     }
 
@@ -265,30 +285,40 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      * @param rotation     camera rotation (0, 90, 180, 270). Recommended: {@link
      *                     nl.thecirclezzm.streaming.encoder.input.video.CameraHelper#getCameraOrientation(Context)}
      */
-    public void startPreview(@NonNull CameraHelper.Facing cameraFacing, SizePixels sizePixels, int rotation) {
-        previewWidth = sizePixels.getWidth();
-        previewHeight = sizePixels.getHeight();
+    public void startPreview(CameraHelper.Facing cameraFacing, int width, int height, int rotation) {
         if (!isStreaming() && !onPreview && !isBackground) {
+            previewWidth = width;
+            previewHeight = height;
             if (surfaceView != null) {
                 cameraManager.prepareCamera(surfaceView.getHolder().getSurface());
             } else if (textureView != null) {
                 cameraManager.prepareCamera(new Surface(textureView.getSurfaceTexture()));
+            } else if (glInterface != null) {
+                boolean isPortrait = context.getResources().getConfiguration().orientation == 1;
+                if (isPortrait) {
+                    glInterface.setEncoderSize(height, width);
+                } else {
+                    glInterface.setEncoderSize(width, height);
+                }
+                glInterface.setRotation(rotation == 0 ? 270 : rotation - 90);
+                glInterface.start();
+                cameraManager.prepareCamera(glInterface.getSurfaceTexture(), width, height);
             }
             cameraManager.openCameraFacing(cameraFacing);
             onPreview = true;
         }
     }
 
-    public void startPreview(@NonNull CameraHelper.Facing cameraFacing, SizePixels sizePixels) {
-        startPreview(cameraFacing, sizePixels, CameraHelper.getCameraOrientation(context));
+    public void startPreview(CameraHelper.Facing cameraFacing, int width, int height) {
+        startPreview(cameraFacing, width, height, CameraHelper.getCameraOrientation(context));
     }
 
-    public void startPreview(@NonNull CameraHelper.Facing cameraFacing, int rotation) {
-        startPreview(cameraFacing, new SizePixels(videoEncoder.getWidth(), videoEncoder.getHeight()), rotation);
+    public void startPreview(CameraHelper.Facing cameraFacing, int rotation) {
+        startPreview(cameraFacing, videoEncoder.getWidth(), videoEncoder.getHeight(), rotation);
     }
 
-    public void startPreview(@NonNull CameraHelper.Facing cameraFacing) {
-        startPreview(cameraFacing, new SizePixels(videoEncoder.getWidth(), videoEncoder.getHeight()),
+    public void startPreview(CameraHelper.Facing cameraFacing) {
+        startPreview(cameraFacing, videoEncoder.getWidth(), videoEncoder.getHeight(),
                 CameraHelper.getCameraOrientation(context));
     }
 
@@ -298,17 +328,22 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
 
     /**
      * Stop camera preview. Ignored if streaming or already stopped. You need call it after
-     *
-     * @stopStream to release camera properly if you will close activity.
+     * <p>
+     * {@link #stopStream} to release camera properly if you will close activity.
      */
     public void stopPreview() {
         if (!isStreaming() && onPreview && !isBackground) {
+            if (glInterface != null) {
+                glInterface.stop();
+            }
             cameraManager.closeCamera(false);
             onPreview = false;
             previewWidth = 0;
             previewHeight = 0;
         }
     }
+
+    protected abstract void startStreamRtp(String url);
 
     /**
      * Need be called after @prepareVideo or/and @prepareAudio. This method override resolution of
@@ -317,10 +352,9 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      *            <p>
      *            RTSP: rtsp://192.168.1.1:1935/live/pedroSG94 RTSPS: rtsps://192.168.1.1:1935/live/pedroSG94
      *            RTMP: rtmp://192.168.1.1:1935/live/pedroSG94 RTMPS: rtmps://192.168.1.1:1935/live/pedroSG94
-     * @startPreview to resolution seated in @prepareVideo. If you never startPreview this method
-     * startPreview for you to resolution seated in @prepareVideo.
+     *            {@link #startPreview} to resolution seated in @prepareVideo. If you never startPreview this method
+     *            startPreview for you to resolution seated in @prepareVideo.
      */
-    @RequiresPermission(value = Manifest.permission.INTERNET)
     public void startStream(String url) {
         streaming = true;
         if (!recordController.isRecording()) {
@@ -328,15 +362,16 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
         } else {
             resetVideoEncoder();
         }
-        streamingProtocol.startStream(url, videoEncoder);
+        startStreamRtp(url);
         onPreview = true;
     }
 
     private void startEncoders() {
         videoEncoder.start();
         audioEncoder.start();
+        prepareGlView();
         microphoneManager.start();
-        if (!cameraManager.isRunning() && videoEncoder.getWidth() != previewWidth
+        if (glInterface == null && !cameraManager.isRunning() && videoEncoder.getWidth() != previewWidth
                 || videoEncoder.getHeight() != previewHeight) {
             if (onPreview) {
                 cameraManager.openLastCamera();
@@ -348,11 +383,46 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
     }
 
     private void resetVideoEncoder() {
+        if (glInterface != null) {
+            glInterface.removeMediaCodecSurface();
+        }
         videoEncoder.reset();
-        cameraManager.closeCamera(false);
-        cameraManager.prepareCamera(videoEncoder.getInputSurface());
-        cameraManager.openLastCamera();
+        if (glInterface != null) {
+            glInterface.addMediaCodecSurface(videoEncoder.getInputSurface());
+        } else {
+            cameraManager.closeCamera(false);
+            cameraManager.prepareCamera(videoEncoder.getInputSurface());
+            cameraManager.openLastCamera();
+        }
     }
+
+    private void prepareGlView() {
+        if (glInterface != null && videoEnabled) {
+            if (glInterface instanceof OffScreenGlThread) {
+                glInterface = new OffScreenGlThread(context);
+                glInterface.init();
+                ((OffScreenGlThread) glInterface).setFps(videoEncoder.getFps());
+            }
+            if (videoEncoder.getRotation() == 90 || videoEncoder.getRotation() == 270) {
+                glInterface.setEncoderSize(videoEncoder.getHeight(), videoEncoder.getWidth());
+            } else {
+                glInterface.setEncoderSize(videoEncoder.getWidth(), videoEncoder.getHeight());
+            }
+            int rotation = videoEncoder.getRotation();
+            glInterface.setRotation(rotation == 0 ? 270 : rotation - 90);
+            if (!cameraManager.isRunning() && videoEncoder.getWidth() != previewWidth
+                    || videoEncoder.getHeight() != previewHeight) {
+                glInterface.start();
+            }
+            if (videoEncoder.getInputSurface() != null) {
+                glInterface.addMediaCodecSurface(videoEncoder.getInputSurface());
+            }
+            cameraManager.prepareCamera(glInterface.getSurfaceTexture(), videoEncoder.getWidth(),
+                    videoEncoder.getHeight());
+        }
+    }
+
+    protected abstract void stopStreamRtp();
 
     /**
      * Stop stream started with @startStream.
@@ -360,12 +430,19 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
     public void stopStream() {
         if (streaming) {
             streaming = false;
-            streamingProtocol.stopStream();
+            stopStreamRtp();
         }
         if (!recordController.isRecording()) {
             cameraManager.closeCamera(!isBackground);
             onPreview = !isBackground;
             microphoneManager.stop();
+            if (glInterface != null) {
+                glInterface.removeMediaCodecSurface();
+                if (glInterface instanceof OffScreenGlThread) {
+                    glInterface.removeMediaCodecSurface();
+                    glInterface.stop();
+                }
+            }
             videoEncoder.stop();
             audioEncoder.stop();
             recordController.resetFormats();
@@ -373,36 +450,38 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    public void onStop() {
-        stopStream();
+    public void onStop(){
         stopPreview();
+        stopStream();
     }
 
     //re connection
-    public void setReTries(int reTries) {
-        streamingProtocol.setReTries(reTries);
-    }
+    public abstract void setReTries(int reTries);
 
-    public boolean shouldRetry(String reason) {
-        return streamingProtocol.shouldRetry(reason);
-    }
+    public abstract boolean shouldRetry(String reason);
 
-    protected void reConnect(long delay) {
-        streamingProtocol.reConnect(delay);
-    }
+    protected abstract void reConnect(long delay);
 
     //cache control
-    public void resizeCache(int newSize) throws RuntimeException {
-        streamingProtocol.resizeCache(newSize);
-    }
+    public abstract void resizeCache(int newSize) throws RuntimeException;
 
-    public int getCacheSize() {
-        return streamingProtocol.getCacheSize();
-    }
+    public abstract int getCacheSize();
 
-    public StreamStats getStats() {
-        return streamingProtocol.getStats();
-    }
+    public abstract long getSentAudioFrames();
+
+    public abstract long getSentVideoFrames();
+
+    public abstract long getDroppedAudioFrames();
+
+    public abstract long getDroppedVideoFrames();
+
+    public abstract void resetSentAudioFrames();
+
+    public abstract void resetSentVideoFrames();
+
+    public abstract void resetDroppedAudioFrames();
+
+    public abstract void resetDroppedVideoFrames();
 
     /**
      * Get supported preview resolutions of back camera in px.
@@ -410,8 +489,8 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      * @return list of preview resolutions supported by back camera
      */
     @NonNull
-    public SizePixels[] getResolutionsBack() {
-        return cameraManager.getCameraResolutionsBack();
+    public List<Size> getResolutionsBack() {
+        return Arrays.asList(cameraManager.getCameraResolutionsBack());
     }
 
     /**
@@ -420,8 +499,8 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      * @return list of preview resolutions supported by front camera
      */
     @NonNull
-    public SizePixels[] getResolutionsFront() {
-        return cameraManager.getCameraResolutionsFront();
+    public List<Size> getResolutionsFront() {
+        return Arrays.asList(cameraManager.getCameraResolutionsFront());
     }
 
     /**
@@ -429,6 +508,7 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      *
      * @return CameraCharacteristics object
      */
+    @Nullable
     public CameraCharacteristics getCameraCharacteristics() {
         return cameraManager.getCameraCharacteristics();
     }
@@ -505,7 +585,7 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      * Use this method if you use a zoom slider.
      *
      * @param level Expected to be >= 1 and <= max zoom level
-     * @see StreamingCamera#getMaxZoom()
+     * @see Camera2Base#getMaxZoom()
      */
     public void setZoom(float level) {
         cameraManager.setZoom(level);
@@ -516,7 +596,7 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
      *
      * @param event motion event. Expected to get event.getPointerCount() > 1
      */
-    public void setZoom(MotionEvent event) {
+    public void setZoom(@NonNull MotionEvent event) {
         cameraManager.setZoom(event);
     }
 
@@ -547,12 +627,20 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
         }
     }
 
+    public GlInterface getGlInterface() {
+        if (glInterface != null) {
+            return glInterface;
+        } else {
+            throw new RuntimeException("You can't do it. You are not using Opengl");
+        }
+    }
+
     private void prepareCameraManager() {
         if (textureView != null) {
             cameraManager.prepareCamera(textureView, videoEncoder.getInputSurface());
         } else if (surfaceView != null) {
             cameraManager.prepareCamera(surfaceView, videoEncoder.getInputSurface());
-        } else {
+        } else if (glInterface == null) {
             cameraManager.prepareCamera(videoEncoder.getInputSurface());
         }
         videoEnabled = true;
@@ -617,30 +705,36 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
         return onPreview;
     }
 
+    protected abstract void getAacDataRtp(ByteBuffer aacBuffer, MediaCodec.BufferInfo info);
+
     @Override
-    public void getAacData(ByteBuffer aacBuffer, MediaCodec.BufferInfo info) {
+    public void getAacData(@NonNull ByteBuffer aacBuffer, @NonNull MediaCodec.BufferInfo info) {
         recordController.recordAudio(aacBuffer, info);
-        if (streaming) streamingProtocol.getAacData(aacBuffer, info);
+        if (streaming) getAacDataRtp(aacBuffer, info);
     }
+
+    protected abstract void onSpsPpsVpsRtp(ByteBuffer sps, ByteBuffer pps, ByteBuffer vps);
 
     @Override
     public void onSpsPps(ByteBuffer sps, ByteBuffer pps) {
-        onSpsPpsVps(sps, pps, null);
+        if (streaming) onSpsPpsVpsRtp(sps, pps, null);
     }
 
     @Override
     public void onSpsPpsVps(ByteBuffer sps, ByteBuffer pps, ByteBuffer vps) {
-        if (streaming) streamingProtocol.onSpsPpsVps(sps, pps, vps);
+        if (streaming) onSpsPpsVpsRtp(sps, pps, vps);
     }
 
+    protected abstract void getH264DataRtp(ByteBuffer h264Buffer, MediaCodec.BufferInfo info);
+
     @Override
-    public void getVideoData(ByteBuffer h264Buffer, MediaCodec.BufferInfo info) {
+    public void getVideoData(@NonNull ByteBuffer h264Buffer, @NonNull MediaCodec.BufferInfo info) {
         recordController.recordVideo(h264Buffer, info);
-        if (streaming) streamingProtocol.getH264Data(h264Buffer, info);
+        if (streaming) getH264DataRtp(h264Buffer, info);
     }
 
     @Override
-    public void inputPCMData(byte[] buffer, int size) {
+    public void inputPCMData(@NonNull byte[] buffer, int size) {
         audioEncoder.inputPCMData(buffer, size);
     }
 
@@ -652,19 +746,5 @@ public class StreamingCamera implements GetAacData, GetVideoData, GetMicrophoneD
     @Override
     public void onAudioFormat(MediaFormat mediaFormat) {
         recordController.setAudioFormat(mediaFormat);
-    }
-
-    public enum SampleRate {
-        sr8(8000), sr16(16000), sr22_5(22500), sr32(32000), sr44_1(44100);
-
-        public final int n;
-
-        SampleRate(int n) {
-            this.n = n;
-        }
-    }
-
-    public enum Protocol {
-        RTMP
     }
 }

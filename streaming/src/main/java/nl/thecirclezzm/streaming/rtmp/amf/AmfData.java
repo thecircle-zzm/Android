@@ -21,8 +21,6 @@ public interface AmfData {
     /**
      * Read and parse bytes from the specified input stream to populate this
      * AMFData instance (deserialize)
-     *
-     * @return the amount of bytes read
      */
     void readFrom(InputStream in) throws IOException;
 

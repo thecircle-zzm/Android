@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.rtmp.io;
 
+import androidx.annotation.NonNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,10 +24,11 @@ public class ChunkStreamInfo {
     public static final byte RTMP_CID_VIDEO = 0x06;
     public static final byte RTMP_CID_AUDIO = 0x07;
     private static long sessionBeginTimestamp;
+    @NonNull
+    private final ByteArrayOutputStream baos = new ByteArrayOutputStream(1024 * 128);
     private RtmpHeader prevHeaderRx;
     private RtmpHeader prevHeaderTx;
     private long realLastTimestamp = System.nanoTime() / 1000000;  // Do not use wall time!
-    private ByteArrayOutputStream baos = new ByteArrayOutputStream(1024 * 128);
 
     /**
      * Sets the session beginning timestamp for all chunks
@@ -37,7 +40,7 @@ public class ChunkStreamInfo {
     /**
      * @return the previous header that was received on this channel, or <code>null</code> if no previous header was received
      */
-    public RtmpHeader prevHeaderRx() {
+    public RtmpHeader getPrevHeaderRx() {
         return prevHeaderRx;
     }
 
@@ -86,7 +89,7 @@ public class ChunkStreamInfo {
     /**
      * @return <code>true</code> if all packet data has been stored, or <code>false</code> if not
      */
-    public boolean storePacketChunk(InputStream in, int chunkSize) throws IOException {
+    public boolean storePacketChunk(@NonNull InputStream in, int chunkSize) throws IOException {
         final int remainingBytes = prevHeaderRx.getPacketLength() - baos.size();
         byte[] chunk = new byte[Math.min(remainingBytes, chunkSize)];
         Util.readBytesUntilFull(in, chunk);
@@ -94,6 +97,7 @@ public class ChunkStreamInfo {
         return (baos.size() == prevHeaderRx.getPacketLength());
     }
 
+    @NonNull
     public ByteArrayInputStream getStoredPacketInputStream() {
         ByteArrayInputStream bis = new ByteArrayInputStream(baos.toByteArray());
         baos.reset();

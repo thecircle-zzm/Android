@@ -1,6 +1,9 @@
 package nl.thecirclezzm.streaming.rtmp.io;
 
-import java.util.HashMap;
+import android.util.SparseArray;
+
+import androidx.annotation.NonNull;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -11,6 +14,10 @@ import nl.thecirclezzm.streaming.rtmp.packets.RtmpPacket;
  */
 public class RtmpSessionInfo {
 
+    @NonNull
+    private final SparseArray<ChunkStreamInfo> chunkChannels = new SparseArray<>();
+    @NonNull
+    private final Map<Integer, String> invokedMethods = new ConcurrentHashMap<>();
     /**
      * The (total) number of bytes read for this window (resets to 0 if the agreed-upon RTMP window acknowledgement size is reached)
      */
@@ -23,14 +30,11 @@ public class RtmpSessionInfo {
      * Used internally to store the total number of bytes read (used when sending Acknowledgement messages)
      */
     private int totalBytesRead = 0;
-
     /**
      * Default chunk size is 128 bytes
      */
     private int rxChunkSize = 128;
     private int txChunkSize = 128;
-    private Map<Integer, ChunkStreamInfo> chunkChannels = new HashMap<>();
-    private Map<Integer, String> invokedMethods = new ConcurrentHashMap<>();
 
     public ChunkStreamInfo getChunkStreamInfo(int chunkStreamId) {
         ChunkStreamInfo chunkStreamInfo = chunkChannels.get(chunkStreamId);
@@ -77,7 +81,6 @@ public class RtmpSessionInfo {
      * Add the specified amount of bytes to the total number of bytes read for this RTMP window;
      *
      * @param numBytes the number of bytes to add
-     * @return <code>true</code> if an "acknowledgement" packet should be sent, <code>false</code> otherwise
      */
     public final void addToWindowBytesRead(final int numBytes, final RtmpPacket packet)
             throws WindowAckRequired {

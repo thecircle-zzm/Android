@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.rtmp.amf;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,13 +48,13 @@ public class AmfNumber implements AmfData {
     }
 
     @Override
-    public void writeTo(OutputStream out) throws IOException {
+    public void writeTo(@NonNull OutputStream out) throws IOException {
         out.write(AmfType.NUMBER.getValue());
         Util.writeDouble(out, value);
     }
 
     @Override
-    public void readFrom(InputStream in) throws IOException {
+    public void readFrom(@NonNull InputStream in) throws IOException {
         // Skip data type byte (we assume it's already read)
         value = Util.readDouble(in);
     }

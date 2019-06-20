@@ -10,11 +10,15 @@ public class FakeLoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        final String domain = "188.166.38.127";
+        final String appName = "a37b62f8ea0d838d";
+
         Intent intent = new Intent(FakeLoginActivity.this, StreamingActivity.class);
         intent.putExtra("username", "Streamer");
-        intent.putExtra("streamingUrl", "rtmp://188.166.38.127:1935/live/a37b62f8ea0d838d");
-        intent.putExtra("chatsUrl", "http://188.166.38.127:5000");
-        intent.putExtra("roomId", "1");
+        intent.putExtra("streamingUrl", "rtmp://" + domain + ":1935/live/" + appName);
+        intent.putExtra("chatsUrl", "http://" + domain + ":5000");
+        intent.putExtra("roomId", appName);
         startActivity(intent);
         finish();
     }

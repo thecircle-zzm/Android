@@ -2,6 +2,9 @@ package nl.thecirclezzm.streaming.rtmp.io;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -25,13 +28,14 @@ public class RtmpDecoder {
 
     private static final String TAG = "RtmpDecoder";
 
-    private RtmpSessionInfo rtmpSessionInfo;
+    private final RtmpSessionInfo rtmpSessionInfo;
 
     public RtmpDecoder(RtmpSessionInfo rtmpSessionInfo) {
         this.rtmpSessionInfo = rtmpSessionInfo;
     }
 
-    public RtmpPacket readPacket(InputStream in) throws IOException {
+    @Nullable
+    public RtmpPacket readPacket(@NonNull InputStream in) throws IOException {
 
         RtmpHeader header = RtmpHeader.readHeader(in, rtmpSessionInfo);
         // Log.d(TAG, "readPacket(): header.messageType: " + header.getMessageType());

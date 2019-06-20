@@ -2,6 +2,8 @@ package nl.thecirclezzm.streaming.rtmp;
 
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -39,6 +41,7 @@ public class Crypto {
      *
      * @return hmac hashed bytes
      */
+    @Nullable
     public byte[] calculateHmacSHA256(byte[] input, byte[] key) {
         byte[] output = null;
         try {
@@ -55,6 +58,7 @@ public class Crypto {
      *
      * @return hmac hashed bytes
      */
+    @Nullable
     public byte[] calculateHmacSHA256(byte[] input, byte[] key, int length) {
         byte[] output = null;
         try {

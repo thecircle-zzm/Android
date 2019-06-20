@@ -1,5 +1,8 @@
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,7 +15,7 @@ import nl.thecirclezzm.streaming.rtmp.io.ChunkStreamInfo;
  */
 public abstract class RtmpPacket {
 
-    protected RtmpHeader header;
+    protected final RtmpHeader header;
 
     public RtmpPacket(RtmpHeader header) {
         this.header = header;
@@ -26,11 +29,12 @@ public abstract class RtmpPacket {
 
     protected abstract void writeBody(OutputStream out) throws IOException;
 
+    @Nullable
     protected abstract byte[] array();
 
     protected abstract int size();
 
-    public void writeTo(OutputStream out, final int chunkSize, final ChunkStreamInfo chunkStreamInfo)
+    public void writeTo(@NonNull OutputStream out, final int chunkSize, @NonNull final ChunkStreamInfo chunkStreamInfo)
             throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         writeBody(baos);

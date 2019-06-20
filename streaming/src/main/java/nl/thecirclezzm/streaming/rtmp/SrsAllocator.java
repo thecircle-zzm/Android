@@ -1,4 +1,6 @@
-package nl.thecirclezzm.streaming.rtmp.ossrs;
+package nl.thecirclezzm.streaming.rtmp;
+
+import androidx.annotation.NonNull;
 
 import java.util.Arrays;
 
@@ -63,7 +65,8 @@ public final class SrsAllocator {
 
     public class Allocation {
 
-        private byte[] data;
+        @NonNull
+        private final byte[] data;
         private int size;
 
         public Allocation(int size) {
@@ -71,6 +74,7 @@ public final class SrsAllocator {
             this.size = 0;
         }
 
+        @NonNull
         public byte[] array() {
             return data;
         }
@@ -108,7 +112,7 @@ public final class SrsAllocator {
             put((byte) (i >>> 24));
         }
 
-        public void put(byte[] bs) {
+        public void put(@NonNull byte[] bs) {
             System.arraycopy(bs, 0, data, size, bs.length);
             size += bs.length;
         }

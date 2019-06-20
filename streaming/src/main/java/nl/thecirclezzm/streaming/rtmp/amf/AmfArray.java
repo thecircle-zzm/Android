@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.rtmp.amf;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -24,7 +26,7 @@ public class AmfArray implements AmfData {
     }
 
     @Override
-    public void readFrom(InputStream in) throws IOException {
+    public void readFrom(@NonNull InputStream in) throws IOException {
         // Skip data type byte (we assume it's already read)
         int length = Util.readUnsignedInt32(in);
         size = 5; // 1 + 4

@@ -1,4 +1,4 @@
-package nl.thecirclezzm.streaming.rtmp.ossrs;
+package nl.thecirclezzm.streaming.rtmp;
 
 /**
  * Created by pedro on 18/12/17.

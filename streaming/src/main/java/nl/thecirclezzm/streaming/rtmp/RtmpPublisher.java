@@ -23,7 +23,6 @@ public interface RtmpPublisher {
      * @param publishType specify the way to publish raw RTMP packets among "live", "record" and
      *                    "append"
      * @return If succeeded return true else return false
-     * @throws IllegalStateException if the client is not connected to a RTMP server
      */
     boolean publish(String publishType);
 

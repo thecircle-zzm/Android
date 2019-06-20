@@ -12,13 +12,13 @@
             android:layout_height="wrap_content"
             android:background="#000000">
 
-            <SurfaceView
+            <nl.thecirclezzm.streaming.main.view.OpenGlView
                 android:id="@+id/surfaceView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center_horizontal"
                 tools:foreground="@tools:sample/backgrounds/scenic"
-                tools:layout_height="640px"
+                tools:layout_height="720px"
                 tools:layout_width="480px" />
 
         </FrameLayout>

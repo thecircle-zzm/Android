@@ -1,5 +1,8 @@
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,7 +44,7 @@ public class Data extends VariableBodyRtmpPacket {
     }
 
     @Override
-    public void readBody(InputStream in) throws IOException {
+    public void readBody(@NonNull InputStream in) throws IOException {
         // Read notification type
         type = AmfString.readStringFrom(in, false);
         int bytesRead = AmfString.sizeOf(type, false);
@@ -54,11 +57,12 @@ public class Data extends VariableBodyRtmpPacket {
      * another output stream
      */
     @Override
-    protected void writeBody(OutputStream out) throws IOException {
+    protected void writeBody(@NonNull OutputStream out) throws IOException {
         AmfString.writeStringTo(out, type, false);
         writeVariableData(out);
     }
 
+    @Nullable
     @Override
     protected byte[] array() {
         return null;

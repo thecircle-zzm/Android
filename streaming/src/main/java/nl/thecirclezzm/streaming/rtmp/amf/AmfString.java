@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.rtmp.amf;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -34,7 +36,7 @@ public class AmfString implements AmfData {
         this.key = isKey;
     }
 
-    public static String readStringFrom(InputStream in, boolean isKey) throws IOException {
+    public static String readStringFrom(@NonNull InputStream in, boolean isKey) throws IOException {
         if (!isKey) {
             // Read past the data type byte
             in.read();
@@ -46,7 +48,7 @@ public class AmfString implements AmfData {
         return new String(byteValue, StandardCharsets.US_ASCII);
     }
 
-    public static void writeStringTo(OutputStream out, String string, boolean isKey)
+    public static void writeStringTo(@NonNull OutputStream out, String string, boolean isKey)
             throws IOException {
         // Strings are ASCII encoded
         byte[] byteValue = string.getBytes(StandardCharsets.US_ASCII);
@@ -64,8 +66,7 @@ public class AmfString implements AmfData {
      * @return the byte size of the resulting AMF string of the specified value
      */
     public static int sizeOf(String string, boolean isKey) {
-        int size = (isKey ? 0 : 1) + 2 + string.getBytes(StandardCharsets.US_ASCII).length;
-        return size;
+        return (isKey ? 0 : 1) + 2 + string.getBytes(StandardCharsets.US_ASCII).length;
     }
 
     public String getValue() {
@@ -85,7 +86,7 @@ public class AmfString implements AmfData {
     }
 
     @Override
-    public void writeTo(OutputStream out) throws IOException {
+    public void writeTo(@NonNull OutputStream out) throws IOException {
         // Strings are ASCII encoded
         byte[] byteValue = this.value.getBytes(StandardCharsets.US_ASCII);
         // Write the STRING data type definition (except if this String is used as a key)
@@ -99,7 +100,7 @@ public class AmfString implements AmfData {
     }
 
     @Override
-    public void readFrom(InputStream in) throws IOException {
+    public void readFrom(@NonNull InputStream in) throws IOException {
         // Skip data type byte (we assume it's already read)
         int length = Util.readUnsignedInt16(in);
         size = 3 + length; // 1 + 2 + length
