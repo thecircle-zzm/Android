@@ -1,11 +1,13 @@
-package nl.thecirclezzm.streaming;
+package nl.thecirclezzm.streaming.main.base;
 
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -17,18 +19,25 @@ import java.nio.ByteBuffer;
  */
 public class RecordController {
 
+    @NonNull
+    private final MediaCodec.BufferInfo videoInfo = new MediaCodec.BufferInfo();
+    @NonNull
+    private final MediaCodec.BufferInfo audioInfo = new MediaCodec.BufferInfo();
+    @NonNull
     private Status status = Status.STOPPED;
+    @Nullable
     private MediaMuxer mediaMuxer;
+    @Nullable
     private MediaFormat videoFormat, audioFormat;
     private int videoTrack = -1;
     private int audioTrack = -1;
+    @Nullable
     private Listener listener;
     //Pause/Resume
     private long pauseMoment = 0;
     private long pauseTime = 0;
-    private MediaCodec.BufferInfo videoInfo = new MediaCodec.BufferInfo();
-    private MediaCodec.BufferInfo audioInfo = new MediaCodec.BufferInfo();
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void startRecord(@NonNull String path, @Nullable Listener listener) throws IOException {
         mediaMuxer = new MediaMuxer(path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
         this.listener = listener;
@@ -36,6 +45,7 @@ public class RecordController {
         if (listener != null) listener.onStatusChange(status);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public void stopRecord() {
         status = Status.STOPPED;
         if (mediaMuxer != null) {
@@ -90,7 +100,8 @@ public class RecordController {
         }
     }
 
-    public void recordVideo(ByteBuffer videoBuffer, MediaCodec.BufferInfo videoInfo) {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public void recordVideo(@NonNull ByteBuffer videoBuffer, @NonNull MediaCodec.BufferInfo videoInfo) {
         if (status == Status.STARTED
                 && videoInfo.flags == MediaCodec.BUFFER_FLAG_KEY_FRAME
                 && videoFormat != null
@@ -110,7 +121,8 @@ public class RecordController {
         }
     }
 
-    public void recordAudio(ByteBuffer audioBuffer, MediaCodec.BufferInfo audioInfo) {
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public void recordAudio(@NonNull ByteBuffer audioBuffer, @NonNull MediaCodec.BufferInfo audioInfo) {
         if (status == Status.RECORDING) {
             updateFormat(this.audioInfo, audioInfo);
             mediaMuxer.writeSampleData(audioTrack, audioBuffer, this.audioInfo);

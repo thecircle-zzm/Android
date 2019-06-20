@@ -13,6 +13,12 @@ public class Frame {
     private boolean flip;
     private int format = ImageFormat.NV21; //nv21 or yv12 supported
 
+    public Frame(byte[] buffer, int orientation, boolean flip) {
+        this.buffer = buffer;
+        this.orientation = orientation;
+        this.flip = flip;
+    }
+
     public Frame(byte[] buffer, int orientation, boolean flip, int format) {
         this.buffer = buffer;
         this.orientation = orientation;

@@ -4,6 +4,7 @@ import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
@@ -21,103 +22,78 @@ public class CodecUtil {
     public static final String AAC_MIME = "audio/mp4a-latm";
     private static final String TAG = "CodecUtil";
 
+    @NonNull
     @RequiresApi(api = Build.VERSION_CODES.M)
     public static List<String> showAllCodecsInfo() {
         List<MediaCodecInfo> mediaCodecInfoList = getAllCodecs();
         List<String> infos = new ArrayList<>();
         for (MediaCodecInfo mediaCodecInfo : mediaCodecInfoList) {
-            String info = "----------------\n";
-            info += "Name: " + mediaCodecInfo.getName() + "\n";
+            StringBuilder info = new StringBuilder("----------------\n");
+            info.append("Name: ").append(mediaCodecInfo.getName()).append("\n");
             for (String type : mediaCodecInfo.getSupportedTypes()) {
-                info += "Type: " + type + "\n";
+                info.append("Type: ").append(type).append("\n");
                 MediaCodecInfo.CodecCapabilities codecCapabilities =
                         mediaCodecInfo.getCapabilitiesForType(type);
-                info += "Max instances: " + codecCapabilities.getMaxSupportedInstances() + "\n";
+                info.append("Max instances: ").append(codecCapabilities.getMaxSupportedInstances()).append("\n");
                 if (mediaCodecInfo.isEncoder()) {
-                    info += "----- Encoder info -----\n";
+                    info.append("----- Encoder info -----\n");
                     MediaCodecInfo.EncoderCapabilities encoderCapabilities =
                             codecCapabilities.getEncoderCapabilities();
-                    info += "Complexity range: "
-                            + encoderCapabilities.getComplexityRange().getLower()
-                            + " - "
-                            + encoderCapabilities.getComplexityRange().getUpper()
-                            + "\n";
-                    info += "Quality range: "
-                            + encoderCapabilities.getQualityRange().getLower()
-                            + " - "
-                            + encoderCapabilities.getQualityRange().getUpper()
-                            + "\n";
-                    info += "CBR supported: " + encoderCapabilities.isBitrateModeSupported(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR) + "\n";
-                    info += "VBR supported: " + encoderCapabilities.isBitrateModeSupported(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR) + "\n";
-                    info += "CQ supported: " + encoderCapabilities.isBitrateModeSupported(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CQ) + "\n";
-                    info += "----- -----\n";
+                    info.append("Complexity range: ").append(encoderCapabilities.getComplexityRange().getLower()).append(" - ").append(encoderCapabilities.getComplexityRange().getUpper()).append("\n");
+                    info.append("Quality range: ").append(encoderCapabilities.getQualityRange().getLower()).append(" - ").append(encoderCapabilities.getQualityRange().getUpper()).append("\n");
+                    info.append("CBR supported: ").append(encoderCapabilities.isBitrateModeSupported(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CBR)).append("\n");
+                    info.append("VBR supported: ").append(encoderCapabilities.isBitrateModeSupported(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR)).append("\n");
+                    info.append("CQ supported: ").append(encoderCapabilities.isBitrateModeSupported(MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_CQ)).append("\n");
+                    info.append("----- -----\n");
                 } else {
-                    info += "----- Decoder info -----\n";
-                    info += "----- -----\n";
+                    info.append("----- Decoder info -----\n");
+                    info.append("----- -----\n");
                 }
 
                 if (codecCapabilities.colorFormats != null && codecCapabilities.colorFormats.length > 0) {
-                    info += "----- Video info -----\n";
-                    info += "Supported colors: \n";
-                    for (int color : codecCapabilities.colorFormats) info += color + "\n";
+                    info.append("----- Video info -----\n");
+                    info.append("Supported colors: \n");
+                    for (int color : codecCapabilities.colorFormats)
+                        info.append(color).append("\n");
                     for (MediaCodecInfo.CodecProfileLevel profile : codecCapabilities.profileLevels)
-                        info += "Profile: " + profile.profile + ", level: " + profile.level + "\n";
+                        info.append("Profile: ").append(profile.profile).append(", level: ").append(profile.level).append("\n");
                     MediaCodecInfo.VideoCapabilities videoCapabilities =
                             codecCapabilities.getVideoCapabilities();
 
-                    info += "Bitrate range: "
-                            + videoCapabilities.getBitrateRange().getLower()
-                            + " - "
-                            + videoCapabilities.getBitrateRange().getUpper()
-                            + "\n";
-                    info += "Frame rate range: "
-                            + videoCapabilities.getSupportedFrameRates().getLower()
-                            + " - "
-                            + videoCapabilities.getSupportedFrameRates().getUpper()
-                            + "\n";
-                    info += "Width range: "
-                            + videoCapabilities.getSupportedWidths().getLower()
-                            + " - "
-                            + videoCapabilities.getSupportedWidths().getUpper()
-                            + "\n";
-                    info += "Height range: "
-                            + videoCapabilities.getSupportedHeights().getLower()
-                            + " - "
-                            + videoCapabilities.getSupportedHeights().getUpper()
-                            + "\n";
-                    info += "----- -----\n";
+                    info.append("Bitrate range: ").append(videoCapabilities.getBitrateRange().getLower()).append(" - ").append(videoCapabilities.getBitrateRange().getUpper()).append("\n");
+                    info.append("Frame rate range: ").append(videoCapabilities.getSupportedFrameRates().getLower()).append(" - ").append(videoCapabilities.getSupportedFrameRates().getUpper()).append("\n");
+                    info.append("Width range: ").append(videoCapabilities.getSupportedWidths().getLower()).append(" - ").append(videoCapabilities.getSupportedWidths().getUpper()).append("\n");
+                    info.append("Height range: ").append(videoCapabilities.getSupportedHeights().getLower()).append(" - ").append(videoCapabilities.getSupportedHeights().getUpper()).append("\n");
+                    info.append("----- -----\n");
                 } else {
-                    info += "----- Audio info -----\n";
+                    info.append("----- Audio info -----\n");
                     for (MediaCodecInfo.CodecProfileLevel profile : codecCapabilities.profileLevels)
-                        info += "Profile: " + profile.profile + ", level: " + profile.level + "\n";
+                        info.append("Profile: ").append(profile.profile).append(", level: ").append(profile.level).append("\n");
                     MediaCodecInfo.AudioCapabilities audioCapabilities =
                             codecCapabilities.getAudioCapabilities();
 
-                    info += "Bitrate range: "
-                            + audioCapabilities.getBitrateRange().getLower()
-                            + " - "
-                            + audioCapabilities.getBitrateRange().getUpper()
-                            + "\n";
-                    info += "Channels supported: " + audioCapabilities.getMaxInputChannelCount() + "\n";
+                    info.append("Bitrate range: ").append(audioCapabilities.getBitrateRange().getLower()).append(" - ").append(audioCapabilities.getBitrateRange().getUpper()).append("\n");
+                    info.append("Channels supported: ").append(audioCapabilities.getMaxInputChannelCount()).append("\n");
                     try {
                         if (audioCapabilities.getSupportedSampleRates() != null
                                 && audioCapabilities.getSupportedSampleRates().length > 0) {
-                            info += "Supported sample rate: \n";
+                            info.append("Supported sample rate: \n");
                             for (int sr : audioCapabilities.getSupportedSampleRates())
-                                info += sr + "\n";
+                                info.append(sr).append("\n");
                         }
-                    } catch (Exception e) {
+                    } catch (Exception ignored) {
                     }
-                    info += "----- -----\n";
+                    info.append("----- -----\n");
                 }
-                info += "Max instances: " + codecCapabilities.getMaxSupportedInstances() + "\n";
+                info.append("Max instances: ").append(codecCapabilities.getMaxSupportedInstances()).append("\n");
             }
-            info += "----------------\n";
-            infos.add(info);
+            info.append("----------------\n");
+            infos.add(info.toString());
         }
         return infos;
     }
 
+    @NonNull
     public static List<MediaCodecInfo> getAllCodecs() {
         List<MediaCodecInfo> mediaCodecInfoList = new ArrayList<>();
         if (Build.VERSION.SDK_INT >= 21) {
@@ -134,6 +110,7 @@ public class CodecUtil {
         return mediaCodecInfoList;
     }
 
+    @NonNull
     public static List<MediaCodecInfo> getAllHardwareEncoders(String mime) {
         List<MediaCodecInfo> mediaCodecInfoList = getAllEncoders(mime);
         List<MediaCodecInfo> mediaCodecInfoHardware = new ArrayList<>();
@@ -146,6 +123,7 @@ public class CodecUtil {
         return mediaCodecInfoHardware;
     }
 
+    @NonNull
     public static List<MediaCodecInfo> getAllHardwareDecoders(String mime) {
         List<MediaCodecInfo> mediaCodecInfoList = getAllDecoders(mime);
         List<MediaCodecInfo> mediaCodecInfoHardware = new ArrayList<>();
@@ -158,6 +136,7 @@ public class CodecUtil {
         return mediaCodecInfoHardware;
     }
 
+    @NonNull
     public static List<MediaCodecInfo> getAllSoftwareEncoders(String mime) {
         List<MediaCodecInfo> mediaCodecInfoList = getAllEncoders(mime);
         List<MediaCodecInfo> mediaCodecInfoSoftware = new ArrayList<>();
@@ -170,6 +149,7 @@ public class CodecUtil {
         return mediaCodecInfoSoftware;
     }
 
+    @NonNull
     public static List<MediaCodecInfo> getAllSoftwareDecoders(String mime) {
         List<MediaCodecInfo> mediaCodecInfoList = getAllDecoders(mime);
         List<MediaCodecInfo> mediaCodecInfoSoftware = new ArrayList<>();
@@ -182,7 +162,30 @@ public class CodecUtil {
         return mediaCodecInfoSoftware;
     }
 
+    @NonNull
     public static List<MediaCodecInfo> getAllEncoders(String mime) {
+        if (Build.VERSION.SDK_INT >= 21) {
+            return getAllEncodersAPI21(mime);
+        } else {
+            return getAllEncodersAPI16(mime);
+        }
+    }
+
+    @NonNull
+    public static List<MediaCodecInfo> getAllDecoders(String mime) {
+        if (Build.VERSION.SDK_INT >= 21) {
+            return getAllDecodersAPI21(mime);
+        } else {
+            return getAllDecodersAPI16(mime);
+        }
+    }
+
+    /**
+     * choose the video encoder by mime. API 21+
+     */
+    @NonNull
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private static List<MediaCodecInfo> getAllEncodersAPI21(String mime) {
         List<MediaCodecInfo> mediaCodecInfoList = new ArrayList<>();
         MediaCodecList mediaCodecList = new MediaCodecList(MediaCodecList.ALL_CODECS);
         MediaCodecInfo[] mediaCodecInfos = mediaCodecList.getCodecInfos();
@@ -200,11 +203,60 @@ public class CodecUtil {
         return mediaCodecInfoList;
     }
 
-    public static List<MediaCodecInfo> getAllDecoders(String mime) {
+    /**
+     * choose the video encoder by mime. API > 16
+     */
+    @NonNull
+    private static List<MediaCodecInfo> getAllEncodersAPI16(String mime) {
+        List<MediaCodecInfo> mediaCodecInfoList = new ArrayList<>();
+        int count = MediaCodecList.getCodecCount();
+        for (int i = 0; i < count; i++) {
+            MediaCodecInfo mci = MediaCodecList.getCodecInfoAt(i);
+            if (!mci.isEncoder()) {
+                continue;
+            }
+            String[] types = mci.getSupportedTypes();
+            for (String type : types) {
+                if (type.equalsIgnoreCase(mime)) {
+                    mediaCodecInfoList.add(mci);
+                }
+            }
+        }
+        return mediaCodecInfoList;
+    }
+
+    /**
+     * choose the video encoder by mime. API 21+
+     */
+    @NonNull
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private static List<MediaCodecInfo> getAllDecodersAPI21(String mime) {
         List<MediaCodecInfo> mediaCodecInfoList = new ArrayList<>();
         MediaCodecList mediaCodecList = new MediaCodecList(MediaCodecList.ALL_CODECS);
         MediaCodecInfo[] mediaCodecInfos = mediaCodecList.getCodecInfos();
         for (MediaCodecInfo mci : mediaCodecInfos) {
+            if (mci.isEncoder()) {
+                continue;
+            }
+            String[] types = mci.getSupportedTypes();
+            for (String type : types) {
+                if (type.equalsIgnoreCase(mime)) {
+                    mediaCodecInfoList.add(mci);
+                }
+            }
+        }
+        return mediaCodecInfoList;
+    }
+
+    /**
+     * choose the video encoder by mime. API > 16
+     */
+    @NonNull
+    private static List<MediaCodecInfo> getAllDecodersAPI16(String mime) {
+        List<MediaCodecInfo> mediaCodecInfoList = new ArrayList<>();
+        int count = MediaCodecList.getCodecCount();
+        for (int i = 0; i < count; i++) {
+            MediaCodecInfo mci = MediaCodecList.getCodecInfoAt(i);
             if (mci.isEncoder()) {
                 continue;
             }

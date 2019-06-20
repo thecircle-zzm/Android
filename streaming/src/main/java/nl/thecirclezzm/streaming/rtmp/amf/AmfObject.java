@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.rtmp.amf;
 
+import androidx.annotation.NonNull;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,8 +20,10 @@ public class AmfObject implements AmfData {
      * Byte sequence that marks the end of an AMF object
      */
     protected static final byte[] OBJECT_END_MARKER = new byte[]{0x00, 0x00, 0x09};
+    @NonNull
+    final
+    Map<String, AmfData> properties = new LinkedHashMap<>();
     protected int size = -1;
-    Map<String, AmfData> properties = new LinkedHashMap<String, AmfData>();
 
     public AmfObject() {
     }
@@ -49,7 +53,7 @@ public class AmfObject implements AmfData {
     }
 
     @Override
-    public void writeTo(OutputStream out) throws IOException {
+    public void writeTo(@NonNull OutputStream out) throws IOException {
         // Begin the object
         out.write(AmfType.OBJECT.getValue());
 
@@ -65,7 +69,7 @@ public class AmfObject implements AmfData {
     }
 
     @Override
-    public void readFrom(InputStream in) throws IOException {
+    public void readFrom(@NonNull InputStream in) throws IOException {
         // Skip data type byte (we assume it's already read)
         size = 1;
         InputStream markInputStream = in.markSupported() ? in : new BufferedInputStream(in);

@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.encoder.utils.yuv;
 
+import androidx.annotation.NonNull;
+
 /**
  * Created by pedro on 31/10/18.
  */
@@ -15,7 +17,7 @@ public class YV12Utils {
     }
 
     // the color transform, @see http://stackoverflow.com/questions/15739684/mediacodec-and-camera-color-space-incorrect
-    public static byte[] toNV12(byte[] input, int width, int height) {
+    public static byte[] toNV12(@NonNull byte[] input, int width, int height) {
         final int frameSize = width * height;
         final int qFrameSize = frameSize / 4;
         System.arraycopy(input, 0, preAllocatedBufferColor, 0, frameSize); // Y
@@ -26,7 +28,7 @@ public class YV12Utils {
         return preAllocatedBufferColor;
     }
 
-    public static byte[] toI420(byte[] input, int width, int height) {
+    public static byte[] toI420(@NonNull byte[] input, int width, int height) {
         final int frameSize = width * height;
         final int qFrameSize = frameSize / 4;
         System.arraycopy(input, 0, preAllocatedBufferColor, 0, frameSize); // Y
@@ -37,7 +39,7 @@ public class YV12Utils {
         return preAllocatedBufferColor;
     }
 
-    public static byte[] toNV21(byte[] input, int width, int height) {
+    public static byte[] toNV21(@NonNull byte[] input, int width, int height) {
         final int frameSize = width * height;
         final int qFrameSize = frameSize / 4;
         System.arraycopy(input, 0, preAllocatedBufferColor, 0, frameSize); // Y
@@ -74,7 +76,7 @@ public class YV12Utils {
         return preAllocatedBufferRotate;
     }
 
-    public static byte[] rotate180(byte[] data, int imageWidth, int imageHeight) {
+    public static byte[] rotate180(@NonNull byte[] data, int imageWidth, int imageHeight) {
         int count = 0;
         final int size = imageWidth * imageHeight;
         for (int i = size - 1; i >= 0; i--) {
@@ -109,10 +111,11 @@ public class YV12Utils {
         for (int x = 0; x < imageWidth / 2; x++) {
             for (int y = 0; y < colorHeight; y++) {
                 //V
+                final int i1 = colorSize + size + (imageWidth * y) - x;
                 preAllocatedBufferRotate[i + colorSize] =
-                        data[colorSize + size + (imageWidth * y) - x + (imageWidth / 2) - 1];
+                        data[i1 + (imageWidth / 2) - 1];
                 preAllocatedBufferRotate[i + colorSize + 1] =
-                        data[colorSize + size + (imageWidth * y) - x + imageWidth - 1];
+                        data[i1 + imageWidth - 1];
                 //U
                 preAllocatedBufferRotate[i++] = data[size + (imageWidth * y) - x + (imageWidth / 2) - 1];
                 preAllocatedBufferRotate[i++] = data[size + (imageWidth * y) - x + imageWidth - 1];

@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -30,7 +32,7 @@ public abstract class ContentData extends RtmpPacket {
     }
 
     @Override
-    public void readBody(InputStream in) throws IOException {
+    public void readBody(@NonNull InputStream in) throws IOException {
         data = new byte[this.header.getPacketLength()];
         Util.readBytesUntilFull(in, data);
     }

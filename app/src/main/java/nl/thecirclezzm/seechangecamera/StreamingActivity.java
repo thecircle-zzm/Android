@@ -47,7 +47,7 @@ public class StreamingActivity extends PermissionCompatActivity {
     public void onUserLeaveHint() {
         enterPictureInPictureMode(
                 new PictureInPictureParams.Builder()
-                        .setSourceRectHint(new Rect(0, 0, 640, 480))
+                        .setSourceRectHint(new Rect(0, 0, 720, 480))
                         .setAspectRatio(new Rational(3, 4))
                         .build());
     }

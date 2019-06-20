@@ -2,6 +2,10 @@ package nl.thecirclezzm.streaming.encoder.utils.yuv;
 
 import android.graphics.Bitmap;
 import android.media.MediaCodecInfo;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import nl.thecirclezzm.streaming.encoder.input.video.Frame;
 import nl.thecirclezzm.streaming.encoder.video.FormatVideoEncoder;
@@ -60,7 +64,7 @@ public class YUVUtil {
         YV12Utils.preAllocateBuffers(length);
     }
 
-    public static byte[] NV21toYUV420byColor(byte[] input, int width, int height,
+    public static byte[] NV21toYUV420byColor(@NonNull byte[] input, int width, int height,
                                              FormatVideoEncoder formatVideoEncoder) {
         switch (formatVideoEncoder) {
             case YUV420PLANAR:
@@ -87,7 +91,7 @@ public class YUVUtil {
         }
     }
 
-    public static byte[] YV12toYUV420byColor(byte[] input, int width, int height,
+    public static byte[] YV12toYUV420byColor(@NonNull byte[] input, int width, int height,
                                              FormatVideoEncoder formatVideoEncoder) {
         switch (formatVideoEncoder) {
             case YUV420PLANAR:
@@ -99,7 +103,7 @@ public class YUVUtil {
         }
     }
 
-    public static byte[] rotateYV12(byte[] data, int width, int height, int rotation) {
+    public static byte[] rotateYV12(@NonNull byte[] data, int width, int height, int rotation) {
         switch (rotation) {
             case 0:
                 return data;
@@ -121,6 +125,7 @@ public class YUVUtil {
         return Bitmap.createBitmap(argb, w, h, Bitmap.Config.ARGB_8888);
     }
 
+    @NonNull
     public static byte[] ARGBtoYUV420SemiPlanar(int[] input, int width, int height) {
         /*
          * COLOR_FormatYUV420SemiPlanar is NV12
@@ -130,15 +135,15 @@ public class YUVUtil {
         int yIndex = 0;
         int uvIndex = frameSize;
 
-        int a, R, G, B, Y, U, V;
+        int /*a,*/ R, G, B, Y, U, V;
         int index = 0;
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
 
-                a = (input[index] & 0xff000000) >> 24; // a is not used obviously
+                // a = (input[index] & 0xff000000) >> 24; // a is not used obviously
                 R = (input[index] & 0xff0000) >> 16;
                 G = (input[index] & 0xff00) >> 8;
-                B = (input[index] & 0xff) >> 0;
+                B = (input[index] & 0xff);
 
                 // well known RGB to YUV algorithm
                 Y = ((66 * R + 129 * G + 25 * B + 128) >> 8) + 16;
@@ -160,7 +165,8 @@ public class YUVUtil {
         return yuv420sp;
     }
 
-    public static byte[] CropYuv(int src_format, byte[] src_yuv, int src_width, int src_height,
+    @Nullable
+    public static byte[] CropYuv(int src_format, @Nullable byte[] src_yuv, int src_width, int src_height,
                                  int dst_width, int dst_height) {
         byte[] dst_yuv;
         if (src_yuv == null) return null;

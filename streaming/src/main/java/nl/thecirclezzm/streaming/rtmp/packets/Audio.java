@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import androidx.annotation.NonNull;
+
 import nl.thecirclezzm.streaming.rtmp.io.ChunkStreamInfo;
 
 /**
@@ -18,6 +20,7 @@ public class Audio extends ContentData {
                 RtmpHeader.MessageType.AUDIO));
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "RTMP Audio";

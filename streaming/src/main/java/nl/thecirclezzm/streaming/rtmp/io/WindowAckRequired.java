@@ -11,8 +11,8 @@ import nl.thecirclezzm.streaming.rtmp.packets.RtmpPacket;
  */
 public class WindowAckRequired extends Exception {
 
-    private RtmpPacket rtmpPacket;
-    private int bytesRead;
+    private final RtmpPacket rtmpPacket;
+    private final int bytesRead;
 
     /**
      * Used when the window acknowledgement size was reached, whilst fully reading

@@ -2,6 +2,8 @@ package nl.thecirclezzm.streaming.rtmp.packets;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -65,7 +67,7 @@ public final class Handshake {
     /**
      * Generates and writes the second handshake packet (C1)
      */
-    public final void writeC1(OutputStream out) throws IOException {
+    public final void writeC1(@NonNull OutputStream out) throws IOException {
         Log.d(TAG, "writeC1");
         Log.d(TAG, "writeC1(): Calculating digest offset");
         Random random = new Random();
@@ -166,7 +168,7 @@ public final class Handshake {
     /**
      * Generates and writes the third handshake packet (C2)
      */
-    public final void writeC2(OutputStream out) throws IOException {
+    public final void writeC2(@NonNull OutputStream out) throws IOException {
         Log.d(TAG, "writeC2");
         // C2 is an echo of S1
         if (s1 == null) {

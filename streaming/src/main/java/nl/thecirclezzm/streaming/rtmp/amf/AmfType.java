@@ -1,7 +1,6 @@
 package nl.thecirclezzm.streaming.rtmp.amf;
 
-import java.util.HashMap;
-import java.util.Map;
+import android.util.SparseArray;
 
 /**
  * AMF0 data type enum
@@ -27,7 +26,7 @@ public enum AmfType {
      */
     OBJECT(0x03), NULL(0x05), UNDEFINED(0x06), ECMA_MAP(0x08), STRICT_ARRAY(0x0A);
 
-    private static final Map<Byte, AmfType> quickLookupMap = new HashMap<>();
+    private static final SparseArray<AmfType> quickLookupMap = new SparseArray<>();
 
     static {
         for (AmfType amfType : AmfType.values()) {

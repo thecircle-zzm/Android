@@ -1,5 +1,7 @@
 package nl.thecirclezzm.streaming.rtmp.amf;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -32,13 +34,13 @@ public class AmfBoolean implements AmfData {
     }
 
     @Override
-    public void writeTo(OutputStream out) throws IOException {
+    public void writeTo(@NonNull OutputStream out) throws IOException {
         out.write(AmfType.BOOLEAN.getValue());
         out.write(value ? 0x01 : 0x00);
     }
 
     @Override
-    public void readFrom(InputStream in) throws IOException {
+    public void readFrom(@NonNull InputStream in) throws IOException {
         value = in.read() == 0x01;
     }
 

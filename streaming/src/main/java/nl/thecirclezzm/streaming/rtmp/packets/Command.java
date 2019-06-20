@@ -1,5 +1,8 @@
 package nl.thecirclezzm.streaming.rtmp.packets;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -61,7 +64,7 @@ public class Command extends VariableBodyRtmpPacket {
     }
 
     @Override
-    public void readBody(InputStream in) throws IOException {
+    public void readBody(@NonNull InputStream in) throws IOException {
         // The command name and transaction ID are always present (AMF string followed by number)
         commandName = AmfString.readStringFrom(in, false);
         transactionId = (int) AmfNumber.readNumberFrom(in);
@@ -70,13 +73,14 @@ public class Command extends VariableBodyRtmpPacket {
     }
 
     @Override
-    protected void writeBody(OutputStream out) throws IOException {
+    protected void writeBody(@NonNull OutputStream out) throws IOException {
         AmfString.writeStringTo(out, commandName, false);
         AmfNumber.writeNumberTo(out, transactionId);
         // Write body data
         writeVariableData(out);
     }
 
+    @Nullable
     @Override
     protected byte[] array() {
         return null;
@@ -87,6 +91,7 @@ public class Command extends VariableBodyRtmpPacket {
         return 0;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "RTMP Command (command: " + commandName + ", transaction ID: " + transactionId + ")";

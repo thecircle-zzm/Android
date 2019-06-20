@@ -1,4 +1,4 @@
-package nl.thecirclezzm.streaming.rtmp.ossrs;
+package nl.thecirclezzm.streaming.rtmp;
 
 import android.media.MediaCodec;
 import android.os.Handler;
@@ -7,6 +7,7 @@ import android.os.Process;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -14,8 +15,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import nl.thecirclezzm.streaming.base.ConnectionCallbacks;
-import nl.thecirclezzm.streaming.rtmp.DefaultRtmpPublisher;
+import nl.thecirclezzm.streaming.rtmp.io.RtmpConnection;
 
 /**
  * Created by winlin on 5/2/15.
@@ -56,17 +56,27 @@ public class SrsFlvMuxer {
 
     private static final int VIDEO_ALLOC_SIZE = 128 * 1024;
     private static final int AUDIO_ALLOC_SIZE = 4 * 1024;
+    @NonNull
+    private final RtmpPublisher publisher;
+    @NonNull
+    private final SrsFlv flv = new SrsFlv();
+    @NonNull
+    private final SrsAllocator mVideoAllocator = new SrsAllocator(VIDEO_ALLOC_SIZE);
+    @NonNull
+    private final SrsAllocator mAudioAllocator = new SrsAllocator(AUDIO_ALLOC_SIZE);
+    private final ConnectCheckerRtmp connectCheckerRtmp;
+    @NonNull
+    private final Handler handler;
     private volatile boolean connected = false;
-    private DefaultRtmpPublisher publisher;
+    @Nullable
     private Thread worker;
-    private SrsFlv flv = new SrsFlv();
     private boolean needToFindKeyFrame = true;
+    @Nullable
     private SrsFlvFrame mVideoSequenceHeader;
+    @Nullable
     private SrsFlvFrame mAudioSequenceHeader;
-    private SrsAllocator mVideoAllocator = new SrsAllocator(VIDEO_ALLOC_SIZE);
-    private SrsAllocator mAudioAllocator = new SrsAllocator(AUDIO_ALLOC_SIZE);
+    @NonNull
     private volatile BlockingQueue<SrsFlvFrame> mFlvTagCache = new LinkedBlockingQueue<>(30);
-    private ConnectionCallbacks connectCheckerRtmp;
     private int sampleRate = 0;
     private boolean isPpsSpsSend = false;
     private byte profileIop = ProfileIop.BASELINE;
@@ -74,7 +84,6 @@ public class SrsFlvMuxer {
     //re connection
     private int numRetry;
     private int reTries;
-    private Handler handler;
     private Runnable runnable;
 
     private long mAudioFramesSent = 0;
@@ -85,9 +94,9 @@ public class SrsFlvMuxer {
     /**
      * constructor.
      */
-    public SrsFlvMuxer(@NonNull ConnectionCallbacks connectCheckerRtmp) {
+    public SrsFlvMuxer(ConnectCheckerRtmp connectCheckerRtmp) {
         this.connectCheckerRtmp = connectCheckerRtmp;
-        publisher = new DefaultRtmpPublisher(connectCheckerRtmp);
+        publisher = new RtmpConnection(connectCheckerRtmp);
         handler = new Handler(Looper.getMainLooper());
     }
 
@@ -172,7 +181,7 @@ public class SrsFlvMuxer {
         publisher.setVideoResolution(width, height);
     }
 
-    private void disconnect(ConnectionCallbacks connectChecker) {
+    private void disconnect(@Nullable ConnectCheckerRtmp connectChecker) {
         try {
             publisher.close();
         } catch (IllegalStateException e) {
@@ -189,7 +198,7 @@ public class SrsFlvMuxer {
 
         if (connectChecker != null) {
             reTries = 0;
-            connectChecker.onDisconnect();
+            connectChecker.onDisconnectRtmp();
         }
         Log.i(TAG, "worker: disconnect ok.");
     }
@@ -207,11 +216,16 @@ public class SrsFlvMuxer {
     public void reConnect(final long delay) {
         reTries--;
         stop(null);
-        runnable = () -> start(url);
+        runnable = new Runnable() {
+            @Override
+            public void run() {
+                start(url);
+            }
+        };
         handler.postDelayed(runnable, delay);
     }
 
-    private boolean connect(String url) {
+    private boolean connect(@NonNull String url) {
         this.url = url;
         if (!connected) {
             Log.i(TAG, String.format("worker: connecting to RTMP server by url=%s\n", url));
@@ -224,7 +238,7 @@ public class SrsFlvMuxer {
         return connected;
     }
 
-    private void sendFlvTag(SrsFlvFrame frame) {
+    private void sendFlvTag(@Nullable SrsFlvFrame frame) {
         if (!connected || frame == null) {
             return;
         }
@@ -248,39 +262,42 @@ public class SrsFlvMuxer {
     /**
      * start to the remote SRS for remux.
      */
-    public void start(final String rtmpUrl) {
-        worker = new Thread(() -> {
-            Process.setThreadPriority(Process.THREAD_PRIORITY_MORE_FAVORABLE);
-            if (!connect(rtmpUrl)) {
-                return;
-            }
-            reTries = numRetry;
-            connectCheckerRtmp.onConnectionSuccess();
-            while (!Thread.interrupted()) {
-                try {
-                    SrsFlvFrame frame = mFlvTagCache.poll(1, TimeUnit.SECONDS);
-                    if (frame == null) {
-                        Log.i(TAG, "Skipping iteration, frame null");
-                        continue;
-                    }
+    public void start(@NonNull final String rtmpUrl) {
+        worker = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_MORE_FAVORABLE);
+                if (!connect(rtmpUrl)) {
+                    return;
+                }
+                reTries = numRetry;
+                connectCheckerRtmp.onConnectionSuccessRtmp();
+                while (!Thread.interrupted()) {
+                    try {
+                        SrsFlvFrame frame = mFlvTagCache.poll(1, TimeUnit.SECONDS);
+                        if (frame == null) {
+                            Log.i(TAG, "Skipping iteration, frame null");
+                            continue;
+                        }
 
-                    if (frame.is_sequenceHeader()) {
-                        if (frame.is_video()) {
-                            mVideoSequenceHeader = frame;
-                            sendFlvTag(mVideoSequenceHeader);
-                        } else if (frame.is_audio()) {
-                            mAudioSequenceHeader = frame;
-                            sendFlvTag(mAudioSequenceHeader);
+                        if (frame.is_sequenceHeader()) {
+                            if (frame.is_video()) {
+                                mVideoSequenceHeader = frame;
+                                sendFlvTag(mVideoSequenceHeader);
+                            } else if (frame.is_audio()) {
+                                mAudioSequenceHeader = frame;
+                                sendFlvTag(mAudioSequenceHeader);
+                            }
+                        } else {
+                            if (frame.is_video() && mVideoSequenceHeader != null) {
+                                sendFlvTag(frame);
+                            } else if (frame.is_audio() && mAudioSequenceHeader != null) {
+                                sendFlvTag(frame);
+                            }
                         }
-                    } else {
-                        if (frame.is_video() && mVideoSequenceHeader != null) {
-                            sendFlvTag(frame);
-                        } else if (frame.is_audio() && mAudioSequenceHeader != null) {
-                            sendFlvTag(frame);
-                        }
+                    } catch (InterruptedException e) {
+                        worker.interrupt();
                     }
-                } catch (InterruptedException e) {
-                    worker.interrupt();
                 }
             }
         });
@@ -294,7 +311,7 @@ public class SrsFlvMuxer {
     /**
      * stop the muxer, disconnect RTMP connection.
      */
-    private void stop(final ConnectionCallbacks connectCheckerRtmp) {
+    private void stop(final ConnectCheckerRtmp connectCheckerRtmp) {
         handler.removeCallbacks(runnable);
         if (worker != null) {
             worker.interrupt();
@@ -310,14 +327,19 @@ public class SrsFlvMuxer {
         needToFindKeyFrame = true;
         Log.i(TAG, "SrsFlvMuxer closed");
 
-        new Thread(() -> disconnect(connectCheckerRtmp)).start();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                disconnect(connectCheckerRtmp);
+            }
+        }).start();
     }
 
-    public void sendVideo(ByteBuffer byteBuffer, MediaCodec.BufferInfo bufferInfo) {
+    public void sendVideo(@NonNull ByteBuffer byteBuffer, @NonNull MediaCodec.BufferInfo bufferInfo) {
         flv.writeVideoSample(byteBuffer, bufferInfo);
     }
 
-    public void sendAudio(ByteBuffer byteBuffer, MediaCodec.BufferInfo bufferInfo) {
+    public void sendAudio(@NonNull ByteBuffer byteBuffer, @NonNull MediaCodec.BufferInfo bufferInfo) {
         flv.writeAudioSample(byteBuffer, bufferInfo);
     }
 
@@ -484,23 +506,31 @@ public class SrsFlvMuxer {
     private class SrsRawH264Stream {
         private final static String TAG = "SrsFlvMuxer";
 
-        private SrsAnnexbSearch annexb = new SrsAnnexbSearch();
-        private SrsFlvFrameBytes nalu_header = new SrsFlvFrameBytes();
-        private SrsFlvFrameBytes seq_hdr = new SrsFlvFrameBytes();
-        private SrsFlvFrameBytes sps_hdr = new SrsFlvFrameBytes();
-        private SrsFlvFrameBytes sps_bb = new SrsFlvFrameBytes();
-        private SrsFlvFrameBytes pps_hdr = new SrsFlvFrameBytes();
-        private SrsFlvFrameBytes pps_bb = new SrsFlvFrameBytes();
+        @NonNull
+        private final SrsAnnexbSearch annexb = new SrsAnnexbSearch();
+        @NonNull
+        private final SrsFlvFrameBytes nalu_header = new SrsFlvFrameBytes();
+        @NonNull
+        private final SrsFlvFrameBytes seq_hdr = new SrsFlvFrameBytes();
+        @NonNull
+        private final SrsFlvFrameBytes sps_hdr = new SrsFlvFrameBytes();
+        @NonNull
+        private final SrsFlvFrameBytes sps_bb = new SrsFlvFrameBytes();
+        @NonNull
+        private final SrsFlvFrameBytes pps_hdr = new SrsFlvFrameBytes();
+        @NonNull
+        private final SrsFlvFrameBytes pps_bb = new SrsFlvFrameBytes();
 
-        public boolean isSps(SrsFlvFrameBytes frame) {
+        public boolean isSps(@NonNull SrsFlvFrameBytes frame) {
             return frame.size >= 1 && (frame.data.get(0) & 0x1f) == SrsAvcNaluType.SPS;
         }
 
-        public boolean isPps(SrsFlvFrameBytes frame) {
+        public boolean isPps(@NonNull SrsFlvFrameBytes frame) {
             return frame.size >= 1 && (frame.data.get(0) & 0x1f) == SrsAvcNaluType.PPS;
         }
 
-        public SrsFlvFrameBytes muxNaluHeader(SrsFlvFrameBytes frame) {
+        @NonNull
+        public SrsFlvFrameBytes muxNaluHeader(@NonNull SrsFlvFrameBytes frame) {
             if (nalu_header.data == null) {
                 nalu_header.data = ByteBuffer.allocate(4);
                 nalu_header.size = 4;
@@ -521,8 +551,8 @@ public class SrsFlvMuxer {
             return nalu_header;
         }
 
-        public void muxSequenceHeader(ByteBuffer sps, ByteBuffer pps,
-                                      ArrayList<SrsFlvFrameBytes> frames) {
+        public void muxSequenceHeader(@NonNull ByteBuffer sps, @NonNull ByteBuffer pps,
+                                      @NonNull ArrayList<SrsFlvFrameBytes> frames) {
             // 5bytes sps/pps header:
             //      configurationVersion, AVCProfileIndication, profile_compatibility,
             //      AVCLevelIndication, lengthSizeMinusOne
@@ -609,7 +639,7 @@ public class SrsFlvMuxer {
             frames.add(pps_bb);
         }
 
-        public SrsAllocator.Allocation muxFlvTag(ArrayList<SrsFlvFrameBytes> frames, int frame_type,
+        public SrsAllocator.Allocation muxFlvTag(@NonNull ArrayList<SrsFlvFrameBytes> frames, int frame_type,
                                                  int avc_packet_type) {
             // for h264 in RTMP video payload, there is 5bytes header:
             //      1bytes, FrameType | CodecID
@@ -651,7 +681,8 @@ public class SrsFlvMuxer {
             return allocation;
         }
 
-        private SrsAnnexbSearch searchStartcode(ByteBuffer bb, int size) {
+        @NonNull
+        private SrsAnnexbSearch searchStartcode(@NonNull ByteBuffer bb, int size) {
             annexb.match = false;
             annexb.nb_start_code = 0;
             if (size - 4 > 0) {
@@ -668,6 +699,7 @@ public class SrsFlvMuxer {
             return annexb;
         }
 
+        @NonNull
         private SrsAnnexbSearch searchAnnexb(ByteBuffer bb, int size) {
             annexb.match = false;
             annexb.nb_start_code = 0;
@@ -692,7 +724,8 @@ public class SrsFlvMuxer {
             return annexb;
         }
 
-        public SrsFlvFrameBytes demuxAnnexb(ByteBuffer bb, int size, boolean isOnlyChkHeader) {
+        @NonNull
+        public SrsFlvFrameBytes demuxAnnexb(@NonNull ByteBuffer bb, int size, boolean isOnlyChkHeader) {
             SrsFlvFrameBytes tbb = new SrsFlvFrameBytes();
             if (bb.position() < size - 4) {
                 // each frame must prefixed by annexb format.
@@ -721,11 +754,15 @@ public class SrsFlvMuxer {
      * remux the annexb to flv tags.
      */
     private class SrsFlv {
-        private SrsRawH264Stream avc = new SrsRawH264Stream();
-        private ArrayList<SrsFlvFrameBytes> ipbs = new ArrayList<>();
+        @NonNull
+        private final SrsRawH264Stream avc = new SrsRawH264Stream();
+        @NonNull
+        private final ArrayList<SrsFlvFrameBytes> ipbs = new ArrayList<>();
         private SrsAllocator.Allocation audio_tag;
         private SrsAllocator.Allocation video_tag;
+        @Nullable
         private ByteBuffer Sps;
+        @Nullable
         private ByteBuffer Pps;
         private boolean aac_specific_config_got;
         private int achannel;
@@ -745,7 +782,7 @@ public class SrsFlvMuxer {
             aac_specific_config_got = false;
         }
 
-        public void writeAudioSample(final ByteBuffer bb, MediaCodec.BufferInfo bi) {
+        public void writeAudioSample(@NonNull final ByteBuffer bb, @NonNull MediaCodec.BufferInfo bi) {
             int dts = (int) (bi.presentationTimeUs / 1000);
 
             audio_tag = mAudioAllocator.allocate(bi.size + 2);
@@ -832,9 +869,9 @@ public class SrsFlvMuxer {
             frame[offset] = (byte) 0xff;
             frame[offset + 1] = (byte) 0xf0;
             // version 0 for MPEG-4, 1 for MPEG-2 (1-bit)
-            frame[offset + 1] |= 0 << 3;
+            frame[offset + 1] |= 0;
             // layer 0 (2-bit)
-            frame[offset + 1] |= 0 << 1;
+            frame[offset + 1] |= 0;
             // protection absent: 1 (1-bit)
             frame[offset + 1] |= 1;
             // profile: audio_object_type - 1 (2-bit)
@@ -845,13 +882,13 @@ public class SrsFlvMuxer {
             frame[offset + 2] |= (2 & (byte) 0x4) >> 2;
             frame[offset + 3] = (byte) ((2 & (byte) 0x03) << 6);
             // original: 0 (1-bit)
-            frame[offset + 3] |= 0 << 5;
+            frame[offset + 3] |= 0;
             // home: 0 (1-bit)
-            frame[offset + 3] |= 0 << 4;
+            frame[offset + 3] |= 0;
             // copyright id bit: 0 (1-bit)
-            frame[offset + 3] |= 0 << 3;
+            frame[offset + 3] |= 0;
             // copyright id start: 0 (1-bit)
-            frame[offset + 3] |= 0 << 2;
+            frame[offset + 3] |= 0;
             // frame size (13-bit)
             frame[offset + 3] |= ((frame.length - 2) & 0x1800) >> 11;
             frame[offset + 4] = (byte) (((frame.length - 2) & 0x7f8) >> 3);
@@ -863,7 +900,7 @@ public class SrsFlvMuxer {
             frame[offset + 6] |= 0x0;
         }
 
-        public void writeVideoSample(final ByteBuffer bb, MediaCodec.BufferInfo bi) {
+        public void writeVideoSample(@NonNull final ByteBuffer bb, @NonNull MediaCodec.BufferInfo bi) {
             if (bi.size < 4) return;
 
             bb.rewind();  //Sometimes the position is not 0.
@@ -936,7 +973,7 @@ public class SrsFlvMuxer {
                     Pps.array().length));
         }
 
-        private void writeH264IpbFrame(ArrayList<SrsFlvFrameBytes> frames, int frame_type, int dts) {
+        private void writeH264IpbFrame(@NonNull ArrayList<SrsFlvFrameBytes> frames, int frame_type, int dts) {
             // when sps or pps not sent, ignore the packet.
             // @see https://github.com/simple-rtmp-server/srs/issues/203
             if (Pps == null || Sps == null) {
@@ -969,7 +1006,7 @@ public class SrsFlvMuxer {
             }
         }
 
-        private void flvFrameCacheAdd(SrsFlvFrame frame) {
+        private void flvFrameCacheAdd(@NonNull SrsFlvFrame frame) {
             try {
                 mFlvTagCache.add(frame);
             } catch (IllegalStateException e) {

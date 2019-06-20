@@ -1,4 +1,6 @@
-package nl.thecirclezzm.streaming.rtmp.ossrs;
+package nl.thecirclezzm.streaming.rtmp.tls;
+
+import androidx.annotation.Nullable;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -33,22 +35,26 @@ public class TLSSocketFactory extends SSLSocketFactory {
         return internalSSLSocketFactory.getSupportedCipherSuites();
     }
 
+    @Nullable
     @Override
     public Socket createSocket() throws IOException {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket());
     }
 
+    @Nullable
     @Override
     public Socket createSocket(Socket s, String host, int port, boolean autoClose)
             throws IOException {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(s, host, port, autoClose));
     }
 
+    @Nullable
     @Override
     public Socket createSocket(String host, int port) throws IOException {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port));
     }
 
+    @Nullable
     @Override
     public Socket createSocket(String host, int port, InetAddress localHost, int localPort)
             throws IOException {
@@ -56,11 +62,13 @@ public class TLSSocketFactory extends SSLSocketFactory {
                 internalSSLSocketFactory.createSocket(host, port, localHost, localPort));
     }
 
+    @Nullable
     @Override
     public Socket createSocket(InetAddress host, int port) throws IOException {
         return enableTLSOnSocket(internalSSLSocketFactory.createSocket(host, port));
     }
 
+    @Nullable
     @Override
     public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort)
             throws IOException {
@@ -68,8 +76,9 @@ public class TLSSocketFactory extends SSLSocketFactory {
                 internalSSLSocketFactory.createSocket(address, port, localAddress, localPort));
     }
 
-    private Socket enableTLSOnSocket(Socket socket) {
-        if (socket != null && (socket instanceof SSLSocket)) {
+    @Nullable
+    private Socket enableTLSOnSocket(@Nullable Socket socket) {
+        if ((socket instanceof SSLSocket)) {
             ((SSLSocket) socket).setEnabledProtocols(new String[]{"TLSv1.1", "TLSv1.2"});
         }
         return socket;
