@@ -46,7 +46,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void sendNetworkRequest(String user) {
         Retrofit.Builder builder = new Retrofit.Builder()
-                .baseUrl("http://boiling-stream-32668.herokuapp.com/api/")
+                .baseUrl("http://188.166.38.127:8080/api/")
                 .addConverterFactory(GsonConverterFactory.create());
 
         Retrofit retrofit = builder.build();

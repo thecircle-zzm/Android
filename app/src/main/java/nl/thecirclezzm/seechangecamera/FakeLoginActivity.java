@@ -27,8 +27,8 @@ public class FakeLoginActivity extends AppCompatActivity {
 
         Intent intent = new Intent(FakeLoginActivity.this, StreamingActivity.class);
         intent.putExtra("username", username);
-        intent.putExtra("streamingUrl", "rtmp://boiling-stream-32668.herokuapp.com:1935/live/" + streamingKey);
-        intent.putExtra("chatsUrl", "http://boiling-stream-32668.herokuapp.com:5000");
+        intent.putExtra("streamingUrl", "rtmp://188.166.38.127:1935/live/" + streamingKey);
+        intent.putExtra("chatsUrl", "http://188.166.38.127:5000");
         intent.putExtra("roomId", streamingKeyEncrypt);
         startActivity(intent);
         finish();
