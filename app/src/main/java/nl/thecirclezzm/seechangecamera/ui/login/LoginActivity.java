@@ -46,7 +46,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void sendNetworkRequest(String user) {
         Retrofit.Builder builder = new Retrofit.Builder()
-                .baseUrl("http://188.166.38.127:8080/api/")
+                .baseUrl("http://boiling-stream-32668.herokuapp.com/api/")
                 .addConverterFactory(GsonConverterFactory.create());
 
         Retrofit retrofit = builder.build();
@@ -58,17 +58,17 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
                 Log.i("Yes", user);
-                Log.i("Yesyeseeys", response.body().toString());
                 if (response.code() == 200) {
-                    Toast.makeText(LoginActivity.this, "Och jongens das handel" + response.body().toString() /* + response.body().getAnswer()*/, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Och jongens das handel" /* + response.body().getAnswer()*/, Toast.LENGTH_SHORT).show();
                     Intent key = new Intent(LoginActivity.this, FakeLoginActivity.class);
+                    key.putExtra("username", user);
                     key.putExtra("streamingKey", response.body().getStreaming().getStreamName());
                     Log.i("StreamingKey", response.body().getStreaming().getStreamName());
                     key.putExtra("streamingKeyEncrypt", response.body().getChats().getRoom());
                     startActivity(key);
                     finish();
                 } else if (response.code() == 400) {
-                    Toast.makeText(LoginActivity.this, "Och jongens das nie goed, verkeerd wachtwoord of gebruikersnaam" /*+ response.body().getAnswer()*/, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Och jongens das nie goed, verkeerde gebruikersnaam" /*+ response.body().getAnswer()*/, Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(LoginActivity.this, "Och jongens das nie goed, status code " + response.code(), Toast.LENGTH_SHORT).show();
                 }
