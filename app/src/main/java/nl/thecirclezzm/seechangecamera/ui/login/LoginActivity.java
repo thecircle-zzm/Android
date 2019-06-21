@@ -2,6 +2,7 @@ package nl.thecirclezzm.seechangecamera.ui.login;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 
+import nl.thecirclezzm.seechangecamera.FakeLoginActivity;
 import nl.thecirclezzm.seechangecamera.R;
 import nl.thecirclezzm.seechangecamera.ui.login.model.User;
 import nl.thecirclezzm.seechangecamera.ui.login.model.sha256;
@@ -29,22 +31,20 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        TextView usernameTextView = findViewById(R.id.usernameTextView);
-
         EditText usernameInput = findViewById(R.id.usernameInputField);
 
         Button loginButton = findViewById(R.id.loginButton);
 
         loginButton.setOnClickListener((view) -> {
 
-            String user =usernameInput.getText().toString();
+            String user = usernameInput.getText().toString();
             Log.i("Yes", user);
             sendNetworkRequest(user);
 
         });
     }
 
-    private void sendNetworkRequest(String user){
+    private void sendNetworkRequest(String user) {
         Retrofit.Builder builder = new Retrofit.Builder()
                 .baseUrl("http://188.166.38.127:8080/api/")
                 .addConverterFactory(GsonConverterFactory.create());
@@ -59,10 +59,15 @@ public class LoginActivity extends AppCompatActivity {
             public void onResponse(Call<User> call, Response<User> response) {
                 Log.i("Yes", user);
                 Log.i("Yesyeseeys", response.body().toString());
-                if(response.code() == 200){
+                if (response.code() == 200) {
                     Toast.makeText(LoginActivity.this, "Och jongens das handel" + response.body().toString() /* + response.body().getAnswer()*/, Toast.LENGTH_SHORT).show();
-                    encryptStreamingkey(response.body().getStreamingKey());
-                } else if(response.code() == 400){
+                    Intent key = new Intent(LoginActivity.this, FakeLoginActivity.class);
+                    key.putExtra("streamingKey", response.body().getStreaming().getStreamName());
+                    Log.i("StreamingKey", response.body().getStreaming().getStreamName());
+                    key.putExtra("streamingKeyEncrypt", response.body().getChats().getRoom());
+                    startActivity(key);
+                    finish();
+                } else if (response.code() == 400) {
                     Toast.makeText(LoginActivity.this, "Och jongens das nie goed, verkeerd wachtwoord of gebruikersnaam" /*+ response.body().getAnswer()*/, Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(LoginActivity.this, "Och jongens das nie goed, status code " + response.code(), Toast.LENGTH_SHORT).show();
@@ -75,20 +80,4 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
-
-    public void encryptStreamingkey(String streamingkey){
-        Log.i("StreamingKey", streamingkey);
-        byte[] sha256Input = streamingkey.getBytes();
-        Log.i("Sha256Input", sha256Input.toString());
-        BigInteger sha256Data = null;
-
-        try {
-            sha256Data = new BigInteger(1, sha256.encryptSha256(sha256Input));
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-
-        String md55tr = sha256Data.toString(16);
-        Log.i("Sha256", md55tr);
-        }
 }

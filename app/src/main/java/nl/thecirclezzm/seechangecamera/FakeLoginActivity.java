@@ -2,6 +2,7 @@ package nl.thecirclezzm.seechangecamera;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,11 +11,23 @@ public class FakeLoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        String streamingKeyEncrypt;
+        String streamingKey;
+
+        Intent key = getIntent();
+
+        streamingKeyEncrypt = key.getStringExtra("streamingKeyEncrypt");
+        streamingKey = key.getStringExtra("streamingKey");
+
+        Log.i("streamingKeyEncrypt", streamingKeyEncrypt);
+        Log.i("streamingKey", streamingKey);
+
         Intent intent = new Intent(FakeLoginActivity.this, StreamingActivity.class);
         intent.putExtra("username", "Streamer");
-        intent.putExtra("streamingUrl", "rtmp://188.166.38.127:1935/live/a37b62f8ea0d838d");
+        intent.putExtra("streamingUrl", "rtmp://188.166.38.127:1935/live/" + streamingKey);
         intent.putExtra("chatsUrl", "http://188.166.38.127:5000");
-        intent.putExtra("roomId", "1");
+        intent.putExtra("roomId", streamingKeyEncrypt);
         startActivity(intent);
         finish();
     }
